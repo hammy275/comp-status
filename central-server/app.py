@@ -16,7 +16,7 @@ def give_data():
 
 @app.route("/ping", methods=["GET", "POST"])
 def ping():
-    return {"error": 200, "message": "Pong!"}
+    return jsonify({"error": 200, "message": "Pong!"})
 
 
 @app.route("/take_data", methods=["POST"])

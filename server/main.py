@@ -35,8 +35,8 @@ def main_loop():
     while True:
         pc_name = socket.gethostname()
 
-        current_memory = psutil.virtual_memory()[0] / 1000000000
-        used_memory = current_memory - (psutil.virtual_memory()[1] / 1000000000)
+        current_memory = round(psutil.virtual_memory()[0] / 1000000000, 2)
+        used_memory = round(current_memory - (psutil.virtual_memory()[1] / 1000000000), 2)
 
         cpu_usage = psutil.cpu_percent(interval=1)
         current_turbo = int(psutil.cpu_freq()[0])
@@ -51,7 +51,7 @@ def main_loop():
             })
         except requests.exceptions.ConnectionError:
             print("Failed to send request!")
-        sleep(1)
+        sleep(0.9)
 
 
 if __name__ == "__main__":
