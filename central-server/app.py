@@ -22,8 +22,11 @@ def ping():
 @app.route("/take_data", methods=["POST"])
 def take_data():
     data = request.form.to_dict()
-    pc_name = data["pc-name"]
-    data.pop("pc-name")
+    pc_name = data["pc_name"]
+    data.pop("pc_name")
     data["time"] = int(time.time())
     db[pc_name] = data
     return jsonify({"error": 200, "message": "Data successfully processed!"})
+
+if __name__ == "__main__":
+    app.run("0.0.0.0", 5000)

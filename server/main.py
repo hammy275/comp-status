@@ -11,6 +11,7 @@ def write_db():
     with open("settings.json", "w") as dbf:
         json.dump(settings, dbf)
 
+
 def startup():
     global settings
     try:
@@ -41,17 +42,22 @@ def main_loop():
         cpu_usage = psutil.cpu_percent(interval=1)
         current_turbo = int(psutil.cpu_freq()[0])
         max_turbo = int(psutil.cpu_freq()[2])
+        cpu_temps = []
+        for i in psutil.sensors_temperatures()["coretemp"]:
+            cpu_temps.append(str(i[1]))
+        cpu_pack_temp = cpu_temps[0]
+        cpu_temps = ",".join(cpu_temps[1:])
 
         try:
             r = requests.post("http://localhost:5000/take_data", {
-                "pc-name": pc_name,
+                "pc_name": pc_name,
                 "current_memory": current_memory, "used_memory": used_memory,
                 "cpu_usage": cpu_usage, "current_turbo": current_turbo, "max_turbo": max_turbo,
+                "cpu_temps": cpu_temps, "cpu_pack_temp": cpu_pack_temp
 
             })
         except requests.exceptions.ConnectionError:
             print("Failed to send request!")
-        sleep(0.9)
 
 
 if __name__ == "__main__":

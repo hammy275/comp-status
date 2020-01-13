@@ -19,7 +19,16 @@ def write_db():
 def get_data():
     try:
         r = requests.get("http://" + settings["ip"] + "/give_data")
-        return json.loads(r.text)
+        data = json.loads(r.text)
+        pcs = []
+        for pc in data["data"]:
+            pcs.append(pc)
+        pcs = sorted(pcs)
+        pc_dict = {}
+        for pc in pcs:
+            pc_dict[pc] = data["data"][pc]
+        data["data"] = pc_dict
+        return data
     except requests.exceptions.ConnectionError:
         return {"message": "Connection error!", "error": -1}
 
@@ -56,12 +65,16 @@ def main():
         else:
             for pc in data["data"]:
                 d = data["data"][pc]
+                ct = d["cpu_temps"].split(",")
+                ct = "°C / ".join(ct) + "°C"
                 last_str += """\n
-{pc}
-Memory: {cm} GB/{tm} GB
-CPU Usage: {p}%
-Turbo: {cc} GHz/{mc} GHz""".format(pc=pc,cm=d["used_memory"], tm=d["current_memory"], p=d["cpu_usage"],
-                cc=d["current_turbo"], mc=d["max_turbo"])
+{pc}:
+Memory: {cm} GB/{tm} GB ({pm}% Usage)
+CPU Stats: {p}% Usage at {cpt}°C
+Turbo: {cc} GHz/{mc} GHz
+Individual Core Temperatures: {ct}""".format(pc=pc,cm=d["used_memory"], tm=d["current_memory"], p=d["cpu_usage"],
+                cc=d["current_turbo"], mc=d["max_turbo"], ct=ct, cpt=d["cpu_pack_temp"],
+                pm=str(round(float(d["used_memory"]) / float(d["current_memory"]) * 100, 1) ))
         time.sleep(1)
 
 
