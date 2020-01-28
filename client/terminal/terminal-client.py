@@ -8,7 +8,7 @@ def nprint(st):
     print(st, end="")
 
 def clear():
-    for i in range(0,50):
+    for i in range(50):
         print()
 
 def write_db():
@@ -28,6 +28,7 @@ def get_data():
         for pc in pcs:
             pc_dict[pc] = data["data"][pc]
         data["data"] = pc_dict
+        data["error"] = r.status_code
         return data
     except requests.exceptions.ConnectionError:
         return {"message": "Connection error!", "error": -1}
@@ -66,14 +67,17 @@ def main():
             for pc in data["data"]:
                 d = data["data"][pc]
                 ct = d["cpu_temps"].split(",")
-                ct = "°C / ".join(ct) + "°C"
+                cp = d["cpu_usages"].split(",")
+                ics = "Individual CPU Temperatures: {t}°C\nIndividual CPU Usages: {c}%".format(
+                    t="°C, ".join(ct), c="%, ".join(cp)
+                )
                 last_str += """\n
 {pc}:
 Memory: {cm} GB/{tm} GB ({pm}% Usage)
 CPU Stats: {p}% Usage at {cpt}°C
 Turbo: {cc} GHz/{mc} GHz
-Individual Core Temperatures: {ct}""".format(pc=pc,cm=d["used_memory"], tm=d["current_memory"], p=d["cpu_usage"],
-                cc=d["current_turbo"], mc=d["max_turbo"], ct=ct, cpt=d["cpu_pack_temp"],
+{ics}""".format(pc=pc,cm=d["used_memory"], tm=d["current_memory"], p=d["cpu_usage"],
+                cc=d["current_turbo"], mc=d["max_turbo"], ics=ics, cpt=d["cpu_pack_temp"],
                 pm=str(round(float(d["used_memory"]) / float(d["current_memory"]) * 100, 1) ))
         time.sleep(1)
 

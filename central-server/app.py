@@ -7,16 +7,20 @@ db = {}
 
 @app.errorhandler(404)
 def no_page(e):
-    return jsonify({"error": 404, "message": "Endpoint not found!"})
+    return jsonify({"message": "Endpoint not found!"}), 404
+
+@app.errorhandler(400)
+def generic_error(e):
+    return jsonify({"message": "HTTP error code 400 occured!"}), 400
 
 
 @app.route("/give_data", methods=["GET", "POST"])
 def give_data():
-    return jsonify({"error": 200, "message": "Data successfully received!", "data" : db})
+    return jsonify({"message": "Data successfully received!", "data" : db})
 
 @app.route("/ping", methods=["GET", "POST"])
 def ping():
-    return jsonify({"error": 200, "message": "Pong!"})
+    return jsonify({"message": "Pong!"})
 
 
 @app.route("/take_data", methods=["POST"])
@@ -26,7 +30,7 @@ def take_data():
     data.pop("pc_name")
     data["time"] = int(time.time())
     db[pc_name] = data
-    return jsonify({"error": 200, "message": "Data successfully processed!"})
+    return jsonify({"message": "Data successfully processed!"})
 
 if __name__ == "__main__":
     app.run("0.0.0.0", 5000)
