@@ -4,6 +4,7 @@ import time
 app = Flask(__name__)
 
 db = {}
+dirty_ssl = True  # Whether to run with Flask's "adhoc" SSL context
 
 @app.errorhandler(404)
 def no_page(e):
@@ -33,4 +34,7 @@ def take_data():
     return jsonify({"message": "Data successfully processed!"})
 
 if __name__ == "__main__":
-    app.run("0.0.0.0", 5000)
+    if dirty_ssl:
+        app.run("0.0.0.0", 5000,ssl_context="adhoc")
+    else:
+        app.run("0.0.0.0", 5000)
