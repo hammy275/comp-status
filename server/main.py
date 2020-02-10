@@ -1,3 +1,5 @@
+#!/usr/bin/python3
+
 import requests
 from time import sleep
 import json
@@ -6,8 +8,38 @@ import signal
 import socket
 import psutil
 
+verify_requests = False
+
 settings = {}
 should_exit = False
+token = None
+
+if not verify_requests:
+    import urllib3
+    urllib3.disable_warnings(urllib3.exceptions.InsecureRequestWarning)
+
+def post_with_auth(url, inp_data={}):
+    global token
+    if token is None:
+        auth_data = {"user": settings["user"], "password": settings["password"], "auth": "password"}
+        r = requests.post(url, data=auth_data, verify=verify_requests)
+        data = json.loads(r.text)
+        if data["message"] == "Unauthorized!":
+            return {"message": "Unauthorized!", "error": -1}
+        elif data["message"] == "Generated token!":
+            token = data["token"]
+    inp_data.update({"token": token, "auth": "token"})
+    r = requests.post(url, data=inp_data, verify=verify_requests)
+    data = json.loads(r.text)
+    if data["message"] == "Unauthorized!":
+        return {"message": "Unauthorized!", "error": -1}
+    elif data["message"] == "Token expired!":
+        token = None
+        return post_with_auth(url, inp_data)
+    else:
+        return data
+
+
 
 def write_db():
     with open("settings.json", "w") as dbf:
@@ -15,11 +47,9 @@ def write_db():
 
 
 def ping(ip):
-    try:
-        r = requests.post("http://" + ip + "/ping")
-        return json.loads(r.text)["message"] == "Pong!"
-    except requests.exceptions.ConnectionError:
-        return False
+    r = requests.post("https://" + ip + "/ping", data={}, verify=verify_requests)
+    data = json.loads(r.text)
+    return data["message"] == "Unauthorized!"
 
 
 def startup():
@@ -30,8 +60,12 @@ def startup():
     except (json.decoder.JSONDecodeError, FileNotFoundError):
         while True:
             ip = input("Enter IP address of central server (including port)! ")
+            user = input("Enter Username: ")
+            password = input("Enter Password: ")
             if ping(ip):
                 settings["ip"] = ip
+                settings["user"] = user
+                settings["password"] = password
                 write_db()
                 break
             else:
@@ -68,7 +102,7 @@ def main_loop():
         cpu_temps = ",".join(cpu_temps[1:])
 
         try:
-            r = requests.post("http://localhost:5000/take_data", {
+            post_with_auth("https://localhost:5000/take_data", {
                 "pc_name": pc_name,
                 "current_memory": current_memory, "used_memory": used_memory,
                 "cpu_usage": cpu_usage, "current_turbo": current_turbo, "max_turbo": max_turbo,
@@ -76,8 +110,6 @@ def main_loop():
                 "multi": temps * 2 == cpus
 
             })
-            if r.status_code != 200:
-                print("Error code: {}".format(str(r.status_code)))
         except requests.exceptions.ConnectionError:
             print("Failed to send request!")
     exit(0)

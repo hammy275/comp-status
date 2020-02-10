@@ -1,8 +1,17 @@
+#!/usr/bin/python3
+
 import json
 import requests
 import time
 
+verify_requests = False
+
 settings = {}
+token = None
+
+if not verify_requests:
+    import urllib3
+    urllib3.disable_warnings(urllib3.exceptions.InsecureRequestWarning)
 
 def nprint(st):
     print(st, end="")
@@ -16,10 +25,35 @@ def write_db():
         json.dump(settings, dbf)
 
 
+def post_with_auth(url, inp_data={}):
+    global token
+    if token is None:
+        auth_data = {"user": settings["user"], "password": settings["password"], "auth": "password"}
+        r = requests.post(url, data=auth_data, verify=verify_requests)
+        data = json.loads(r.text)
+        if data["message"] == "Unauthorized!":
+            return {"message": "Unauthorized!", "error": -1}
+        elif data["message"] == "Generated token!":
+            token = data["token"]
+    inp_data.update({"token": token, "auth": "token"})
+    r = requests.post(url, data=inp_data, verify=verify_requests)
+    data = json.loads(r.text)
+    if data["message"] == "Unauthorized!":
+        return {"message": "Unauthorized!", "error": -1}
+    elif data["message"] == "Token expired!":
+        token = None
+        return post_with_auth(url)
+    else:
+        return data
+
+
+
+
 def get_data():
     try:
-        r = requests.get("http://" + settings["ip"] + "/give_data")
-        data = json.loads(r.text)
+        data = post_with_auth("https://" + settings["ip"] + "/give_data")
+        if data["message"] == "Unauthorized!":
+            return {"message": "Unauthorized!", "error": -1}
         pcs = []
         for pc in data["data"]:
             pcs.append(pc)
@@ -28,7 +62,7 @@ def get_data():
         for pc in pcs:
             pc_dict[pc] = data["data"][pc]
         data["data"] = pc_dict
-        data["error"] = r.status_code
+        data["error"] = 200
         return data
     except requests.exceptions.ConnectionError:
         return {"message": "Connection error!", "error": -1}
@@ -42,14 +76,19 @@ def startup():
     except (json.decoder.JSONDecodeError, FileNotFoundError):
         while True:
             ip = input("Enter IP address of central server (including port)! ")
+            user = input("Enter Username: ")
+            password = input("Enter Password: ")
             try:
-                r = requests.post("http://" + ip + "/ping")
-                if json.loads(r.text)["message"] == "Pong!":
+                r = requests.post("https://" + ip + "/ping", data={}, verify=verify_requests)
+                data = json.loads(r.text)
+                if data["message"] == "Unauthorized!":
                     settings["ip"] = ip
+                    settings["user"] = user
+                    settings["password"] = password
                     write_db()
                     break
                 else:
-                    print("Invalid IP!")
+                    print("Invalid IP or username/password!")
             except requests.exceptions.ConnectionError:
                 print("Connection error/invalid IP address!")
 
