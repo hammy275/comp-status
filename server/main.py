@@ -1,5 +1,23 @@
 #!/usr/bin/python3
 
+license = """
+    comp-status: A small set of Python files to get the status of computers
+    Copyright (C) 2020  hammy3502
+
+    This program is free software: you can redistribute it and/or modify
+    it under the terms of the GNU General Public License as published by
+    the Free Software Foundation, either version 3 of the License, or
+    (at your option) any later version.
+
+    This program is distributed in the hope that it will be useful,
+    but WITHOUT ANY WARRANTY; without even the implied warranty of
+    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+    GNU General Public License for more details.
+
+    You should have received a copy of the GNU General Public License
+    along with this program.  If not, see <https://www.gnu.org/licenses/>.
+"""
+
 import requests
 from time import sleep
 import json
@@ -59,6 +77,9 @@ def startup():
         with open("settings.json") as f:
             settings = json.load(f)
     except (json.decoder.JSONDecodeError, FileNotFoundError):
+        print("Welcome to comp-status! By using this program, you agree to the following license: ")
+        print(license)
+        print("If you don't agree with the license above, please exit now.")
         while True:
             ip = input("Enter IP address of central server (including port)! ")
             user = input("Enter Username: ")
@@ -80,6 +101,7 @@ def set_exit(sig, frame):
 
 
 def main_loop():
+    print("Authenticated Successfully! Running server loop...")
     while not should_exit:
         pc_name = socket.gethostname()
 
@@ -117,6 +139,6 @@ def main_loop():
 
 
 if __name__ == "__main__":
-    signal.signal(signal.SIGINT, set_exit)
     startup()
+    signal.signal(signal.SIGINT, set_exit)
     main_loop()

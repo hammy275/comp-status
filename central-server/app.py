@@ -1,5 +1,23 @@
 #!/usr/bin/python3
 
+"""
+    comp-status: A small set of Python files to get the status of computers
+    Copyright (C) 2020  hammy3502
+
+    This program is free software: you can redistribute it and/or modify
+    it under the terms of the GNU General Public License as published by
+    the Free Software Foundation, either version 3 of the License, or
+    (at your option) any later version.
+
+    This program is distributed in the hope that it will be useful,
+    but WITHOUT ANY WARRANTY; without even the implied warranty of
+    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+    GNU General Public License for more details.
+
+    You should have received a copy of the GNU General Public License
+    along with this program.  If not, see <https://www.gnu.org/licenses/>.
+"""
+
 from flask import Flask, jsonify, request
 import time
 import auth
@@ -26,14 +44,14 @@ def auth_request():
         elif data["auth"] == "token":
             r_data = auth.auth_token(data["token"])
             if r_data != {"message": "Authorized"}:
-                return r_data
+                return jsonify(r_data), 401
             else:
                 return
         else:
-            return {"message": "Unauthorized!"}
+            return {"message": "Unauthorized!"}, 401
     except KeyError:
         print(data)
-        return {"message": "Unauthorized!"}
+        return {"message": "Unauthorized!"}, 401
 
 
 @app.route("/give_data", methods=["GET", "POST"])
