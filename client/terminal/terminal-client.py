@@ -3,6 +3,7 @@
 import json
 import requests
 import time
+import getpass
 
 verify_requests = False
 
@@ -44,6 +45,7 @@ def post_with_auth(url, inp_data={}):
         token = None
         return post_with_auth(url)
     else:
+        data["error"] = r.status_code
         return data
 
 
@@ -62,7 +64,6 @@ def get_data():
         for pc in pcs:
             pc_dict[pc] = data["data"][pc]
         data["data"] = pc_dict
-        data["error"] = 200
         return data
     except requests.exceptions.ConnectionError:
         return {"message": "Connection error!", "error": -1}
@@ -77,14 +78,13 @@ def startup():
         while True:
             ip = input("Enter IP address of central server (including port)! ")
             user = input("Enter Username: ")
-            password = input("Enter Password: ")
+            password = getpass.getpass("Enter Password: ")
+            settings["user"] = user
+            settings["password"] = password
             try:
-                r = requests.post("https://" + ip + "/ping", data={}, verify=verify_requests)
-                data = json.loads(r.text)
-                if data["message"] == "Unauthorized!":
+                data = post_with_auth("https://" + ip + "/ping")
+                if data["message"] == "Pong!":
                     settings["ip"] = ip
-                    settings["user"] = user
-                    settings["password"] = password
                     write_db()
                     break
                 else:

@@ -4,6 +4,7 @@ import requests
 from time import sleep
 import json
 import signal
+import getpass
 
 import socket
 import psutil
@@ -37,6 +38,7 @@ def post_with_auth(url, inp_data={}):
         token = None
         return post_with_auth(url, inp_data)
     else:
+        data["error"] = r.status_code
         return data
 
 
@@ -47,9 +49,8 @@ def write_db():
 
 
 def ping(ip):
-    r = requests.post("https://" + ip + "/ping", data={}, verify=verify_requests)
-    data = json.loads(r.text)
-    return data["message"] == "Unauthorized!"
+    data = post_with_auth("https://" + ip + "/ping")
+    return data["message"] == "Pong!"
 
 
 def startup():
@@ -61,11 +62,11 @@ def startup():
         while True:
             ip = input("Enter IP address of central server (including port)! ")
             user = input("Enter Username: ")
-            password = input("Enter Password: ")
+            password = getpass.getpass("Enter Password: ")
+            settings["user"] = user
+            settings["password"] = password
             if ping(ip):
                 settings["ip"] = ip
-                settings["user"] = user
-                settings["password"] = password
                 write_db()
                 break
             else:
