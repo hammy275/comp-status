@@ -1,11 +1,11 @@
 
 # comp-status
 
-A small utility to get processor usage, RAM usage, etc. from computers. **This utility should NOT be used in any remotely-important environment due to an absolute lack of authentication.**
+A small utility to get processor usage, RAM usage, etc. from computers.
 
 ## WARNING
 
-This program currently has __no__ form of authentication, and as such, should only be used in a testing environment.
+I don't entirely know what I'm doing, and this program has a form of authentication with __no__ encryption outside of using HTTPS to communicate. I have no idea if I'll even be adding encryption or not, because it's really beyond my scope of knowledge. Either way, __DO NOT USE THIS SOFTWARE IN ANY REMOTELY IMPORTANT ENVIRONMENT__ (unless you're willing to take the risk and/or know what you're doing).
 
 ## Requirements
 
