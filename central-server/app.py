@@ -56,13 +56,13 @@ def auth_request():
         else:
             return {"message": "Unauthorized!"}, 401
     except KeyError:
-        print(data)
         return {"message": "Unauthorized!"}, 401
 
 
 @app.route("/give_data", methods=["GET", "POST"])
 def give_data():
     return jsonify({"message": "Data successfully received!", "data" : db})
+
 
 @app.route("/ping", methods=["GET", "POST"])
 def ping():
@@ -77,6 +77,29 @@ def take_data():
     data["time"] = int(time.time())
     db[pc_name] = data
     return jsonify({"message": "Data successfully processed!"})
+
+
+@app.route("/get_tokens", methods=["POST"])
+def get_tokens():
+    data = request.form.to_dict()
+    print(data)
+    if auth.check_permission(data["token"], "revoke_tokens"):
+        return jsonify({"tokens": auth.get_tokens(), "message": "Tokens successfully retrieved!"})
+    else:
+        return jsonify({"message": "Unauthorized!"}), 401
+    
+
+@app.route("/delete_token", methods=["POST"])
+def delete_token():
+    data = request.form.to_dict()
+    if auth.check_permission(data["token"], "revoke_tokens"):
+        try:
+            return jsonify(auth.delete_token(data["token_to_delete"]))
+        except KeyError:
+            return jsonify({"message": "Token to delete not specified!"})
+    else:
+        return jsonify({"message": "Unauthorized!"}), 401
+
 
 if __name__ == "__main__":
     app.run("0.0.0.0", 5000,ssl_context="adhoc")

@@ -23,7 +23,7 @@ from random import choice
 expire_time = 60*60*24  # Time in seconds until a token expires
 
 users = {
-    "TestUser": {"password": "abc123"}
+    "TestUser": {"password": "abc123", "permissions": ["revoke_tokens"]}
 }  # Will be stored in a file (hopefully encrypted) at some point. Using a test user for now.
 
 tokens = {}
@@ -31,6 +31,15 @@ nums = []
 for i in range(0,10):
     nums.append(str(i))
 chars = list(string.ascii_lowercase) + nums
+
+
+def check_permission(token, permission):
+    try:
+        user = tokens[token]["user"]
+        return permission in users[user]["permissions"]
+    except:
+        return False
+
 
 def gen_token():
     """Generate Random 32 Char Token.
@@ -40,12 +49,39 @@ def gen_token():
 
     """
     token = ""
-    for i in range(32):
+    for _ in range(32):
         if choice([True, False]):
             token += choice(chars).upper()
         else:
             token += choice(chars)
     return token
+
+
+def get_tokens():
+    """Get Token Dict.
+
+    Returns:
+        dict: The tokens dictionary.
+
+    """
+    return tokens
+
+
+def delete_token(token):
+    """Delete Token.
+
+    Args:
+        token (str): The token to delete
+
+    Returns:
+        dict: A dict to be parsed into JSON to return to clients
+
+    """
+    try:
+        del tokens[token]
+        return {"message": "Token deleted successfully!"}
+    except KeyError:
+        return {"message": "Token does not exist!"}
 
 
 def auth_token(token):
@@ -86,7 +122,7 @@ def get_token(user, password):
     try:
         if users[user]["password"] == password:
             token = gen_token()
-            tokens[token] = {"time": time.time()}
+            tokens[token] = {"time": time.time(), "user": user, "permissions": users[user]["permissions"]}
             return {"message": "Generated token!", "token": token}
         else:
             return {"message": "Unauthorized!"} 
