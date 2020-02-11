@@ -154,7 +154,7 @@ def token_manager():
         ask = input("Type a number to delete that token, or anything else to exit.")
         try:
             ask = int(ask)
-            post_with_auth("https://" + settings["ip"] + "/delete_token", {"token_to_delete": list(data["tokens"].keys())[c]})
+            post_with_auth("https://" + settings["ip"] + "/delete_token", {"token_to_delete": list(data["tokens"].keys())[ask]})
         except ValueError:
             return
 

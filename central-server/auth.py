@@ -19,12 +19,17 @@
 import time
 import string
 from random import choice
+import json
+import sys
+
+try:
+    with open("users.json") as f:
+        users = json.load(f)
+except (json.decoder.JSONDecodeError, FileNotFoundError):
+    print("users.json does not exist! Please run user_manager.py, and configure at least 1 user!")
+    sys.exit(1)
 
 expire_time = 60*60*24  # Time in seconds until a token expires
-
-users = {
-    "TestUser": {"password": "abc123", "permissions": ["revoke_tokens"]}
-}  # Will be stored in a file (hopefully encrypted) at some point. Using a test user for now.
 
 tokens = {}
 nums = []
