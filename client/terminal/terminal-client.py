@@ -79,10 +79,10 @@ def post_with_auth(url, inp_data={}):
     data = json.loads(r.text)
     if data["message"] == "Unauthorized!":
         token = None
-        return post_with_auth(url)
+        return post_with_auth(url, inp_data)
     elif data["message"] == "Token expired!":
         token = None
-        return post_with_auth(url)
+        return post_with_auth(url, inp_data)
     else:
         data["error"] = r.status_code
         return data
