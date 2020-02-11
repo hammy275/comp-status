@@ -78,15 +78,14 @@ def post_with_auth(url, inp_data={}):
     r = requests.post(url, data=inp_data, verify=verify_requests)
     data = json.loads(r.text)
     if data["message"] == "Unauthorized!":
-        return {"message": "Unauthorized!", "error": -1}
+        token = None
+        return post_with_auth(url)
     elif data["message"] == "Token expired!":
         token = None
         return post_with_auth(url)
     else:
         data["error"] = r.status_code
         return data
-
-
 
 
 def get_data():
@@ -144,8 +143,9 @@ def startup():
 def token_manager():
     """Token Manager."""
     data = post_with_auth("https://" + settings["ip"] + "/get_tokens")
-    if data["message"] == "Unauthorized!":
+    if data["message"] == "No permission!":
         print("You aren't authorized to manage tokens!")
+        time.sleep(3)
         return
     elif data["message"] == "Tokens successfully retrieved!":
         c = 0

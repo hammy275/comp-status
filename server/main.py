@@ -48,6 +48,7 @@ def post_with_auth(url, inp_data={}):
 
     Returns:
         dict: The data returned from the POST request
+
     """
     global token
     if token is None:
@@ -62,10 +63,11 @@ def post_with_auth(url, inp_data={}):
     r = requests.post(url, data=inp_data, verify=verify_requests)
     data = json.loads(r.text)
     if data["message"] == "Unauthorized!":
-        return {"message": "Unauthorized!", "error": -1}
+        token = None
+        return post_with_auth(url)
     elif data["message"] == "Token expired!":
         token = None
-        return post_with_auth(url, inp_data)
+        return post_with_auth(url)
     else:
         data["error"] = r.status_code
         return data

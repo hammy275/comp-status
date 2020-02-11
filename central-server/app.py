@@ -82,11 +82,10 @@ def take_data():
 @app.route("/get_tokens", methods=["POST"])
 def get_tokens():
     data = request.form.to_dict()
-    print(data)
     if auth.check_permission(data["token"], "revoke_tokens"):
         return jsonify({"tokens": auth.get_tokens(), "message": "Tokens successfully retrieved!"})
     else:
-        return jsonify({"message": "Unauthorized!"}), 401
+        return jsonify({"message": "No permission!"}), 401
     
 
 @app.route("/delete_token", methods=["POST"])
@@ -98,7 +97,7 @@ def delete_token():
         except KeyError:
             return jsonify({"message": "Token to delete not specified!"})
     else:
-        return jsonify({"message": "Unauthorized!"}), 401
+        return jsonify({"message": "No permission!"}), 401
 
 
 if __name__ == "__main__":
