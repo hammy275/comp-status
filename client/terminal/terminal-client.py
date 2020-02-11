@@ -33,18 +33,38 @@ if not verify_requests:
     urllib3.disable_warnings(urllib3.exceptions.InsecureRequestWarning)
 
 def nprint(st):
+    """Print Without Newline.
+
+    Args:
+        st (any): Thing to print without newline
+
+    """
     print(st, end="")
 
 def clear():
+    """Clear Screen."""
     for i in range(50):
         print()
 
 def write_db():
+    """Write DB to File."""
     with open("settings.json", "w") as dbf:
         json.dump(settings, dbf)
 
 
 def post_with_auth(url, inp_data={}):
+    """Post Request with Authorization.
+
+    Send a POST request while trying to authenticate with the central server
+
+    Args:
+        url (str): URL to send POST request to
+        inp_data (dict, optional): Data to POST. Defaults to {}.
+
+    Returns:
+        dict: The data returned from the POST request
+
+    """
     global token
     if token is None:
         auth_data = {"user": settings["user"], "password": settings["password"], "auth": "password"}
@@ -70,6 +90,12 @@ def post_with_auth(url, inp_data={}):
 
 
 def get_data():
+    """Get PC Data.
+
+    Returns:
+        dict: A dictionary containing PC data.
+
+    """
     try:
         data = post_with_auth("https://" + settings["ip"] + "/give_data")
         if data["message"] == "Unauthorized!":
@@ -88,6 +114,7 @@ def get_data():
 
 
 def startup():
+    """Run on Startup."""
     global settings
     try:
         with open("settings.json") as f:
@@ -115,6 +142,7 @@ def startup():
 
 
 def main():
+    """Main Loop."""
     last_str = ""
     while True:
         clear()

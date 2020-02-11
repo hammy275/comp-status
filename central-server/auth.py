@@ -33,6 +33,12 @@ for i in range(0,10):
 chars = list(string.ascii_lowercase) + nums
 
 def gen_token():
+    """Generate Random 32 Char Token.
+
+    Returns:
+        str: 32 random alphanumeric characters
+
+    """
     token = ""
     for i in range(32):
         if choice([True, False]):
@@ -43,6 +49,17 @@ def gen_token():
 
 
 def auth_token(token):
+    """Check Token.
+
+    Check whether the provided token is valid for use.
+
+    Args:
+        token (str): Token to check if valid.
+
+    Returns:
+        dict: Whether the token is authorized, unauthorized, or expired.
+
+    """
     try:
         if tokens[token]["time"] + expire_time > time.time():
             return {"message": "Authorized"}
@@ -53,6 +70,18 @@ def auth_token(token):
 
 
 def get_token(user, password):
+    """Get Token for User.
+
+    Generates a token for a user if their username and password are valid.
+
+    Args:
+        user (str): Client supplied username
+        password (str): Client supplied password
+
+    Returns:
+        dict: A generated token or unauthorized.
+
+    """
     time.sleep(1)
     try:
         if users[user]["password"] == password:

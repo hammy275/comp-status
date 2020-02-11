@@ -37,6 +37,12 @@ def generic_error(e):
 
 @app.before_request
 def auth_request():
+    """Authenticate User.
+
+    Returns:
+        JSON: JSON data to return to client, whether it be requested data or alerting of lack of authorization.
+
+    """
     data = request.form.to_dict()
     try:
         if data["auth"] == "password":

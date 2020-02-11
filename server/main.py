@@ -38,6 +38,17 @@ if not verify_requests:
     urllib3.disable_warnings(urllib3.exceptions.InsecureRequestWarning)
 
 def post_with_auth(url, inp_data={}):
+    """Post Request with Authorization.
+
+    Send a POST request while trying to authenticate with the central server
+
+    Args:
+        url (str): URL to send POST request to
+        inp_data (dict, optional): Data to POST. Defaults to {}.
+
+    Returns:
+        dict: The data returned from the POST request
+    """
     global token
     if token is None:
         auth_data = {"user": settings["user"], "password": settings["password"], "auth": "password"}
@@ -60,18 +71,30 @@ def post_with_auth(url, inp_data={}):
         return data
 
 
-
 def write_db():
+    """Write DB to File."""
     with open("settings.json", "w") as dbf:
         json.dump(settings, dbf)
 
 
 def ping(ip):
+    """Ping.
+
+    Ping IP/address for {"message": "Pong!"}
+
+    Args:
+        ip (str): An IP address or website without the https://. ex. example.com or 127.0.0.1
+
+    Returns:
+        bool: Whether the requested JSON at thes URL has the key "message" that equals "Pong!"
+
+    """
     data = post_with_auth("https://" + ip + "/ping")
     return data["message"] == "Pong!"
 
 
 def startup():
+    """Startup."""
     global settings
     try:
         with open("settings.json") as f:
@@ -95,12 +118,14 @@ def startup():
 
 
 def set_exit(sig, frame):
+    """Exit on CTRL+C."""
     global should_exit
     print("\nExiting...")
     should_exit = True
 
 
 def main_loop():
+    """Main Program Loop."""
     print("Authenticated Successfully! Running server loop...")
     while not should_exit:
         pc_name = socket.gethostname()
