@@ -18,7 +18,7 @@
 
 import time
 import string
-from random import choice
+from secrets import choice, token_urlsafe
 import json
 import sys
 
@@ -32,10 +32,6 @@ except (json.decoder.JSONDecodeError, FileNotFoundError):
 expire_time = 60*60*24  # Time in seconds until a token expires
 
 tokens = {}
-nums = []
-for i in range(0,10):
-    nums.append(str(i))
-chars = list(string.ascii_lowercase) + nums
 
 
 def check_permission(token, permission):
@@ -47,19 +43,13 @@ def check_permission(token, permission):
 
 
 def gen_token():
-    """Generate Random 32 Char Token.
+    """Generate Random 64 Char Token.
 
     Returns:
-        str: 32 random alphanumeric characters
+        str: A string of Random alphanumeric characters
 
     """
-    token = ""
-    for _ in range(32):
-        if choice([True, False]):
-            token += choice(chars).upper()
-        else:
-            token += choice(chars)
-    return token
+    return token_urlsafe(64)
 
 
 def get_tokens():

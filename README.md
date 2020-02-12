@@ -9,7 +9,7 @@ I don't entirely know what I'm doing, and this program has a form of authenticat
 
 ## Requirements
 
-* Python 3
+* Python 3.6 or later
 * Pip to install the requirements.txt
 
 ## Folders

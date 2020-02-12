@@ -128,7 +128,7 @@ def set_exit(sig, frame):
 
 def main_loop():
     """Main Program Loop."""
-    print("Authenticated Successfully! Running server loop...")
+    print("Running server loop...")
     while not should_exit:
         pc_name = socket.gethostname()
 
