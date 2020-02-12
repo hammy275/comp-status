@@ -29,8 +29,8 @@ def get_input(question, options, default=None):
 
 def main():
     opt = "-1"
-    while opt != "0":
-        opt = get_input("1 - Add User\n2 - Remove/List User(s)\n0 - Exit\n", ["1", "2", "0"])
+    while opt != "0" and opt.lower() != "e":
+        opt = get_input("1 - Add User\n2 - Remove/List User(s)\n3 - Change Password of User\n0/e - Exit\n", ["1", "2", "3", "0", "e", "E"])
         if opt == "1":
             user = input("Enter Username: ")
             try:
@@ -53,6 +53,7 @@ def main():
             c = 0
             for user in users.keys():
                 print("{c} - {u}".format(c=c, u=user))
+                c += 1
             to_del = input("E to exit, or the number to delete the specified user: ")
             if to_del.lower() != "e":
                 try:
@@ -60,6 +61,27 @@ def main():
                     del users[list(users.keys())[to_del]]
                 except ValueError:
                     print("NaN!")
+        elif opt == "3":
+            print("\n\n")
+            c = 0
+            for user in users.keys():
+                print("{c} - {u}".format(c=c, u=user))
+                c += 1
+            pass_user = input("E to exit, or the number to change that user's password: ")
+            if pass_user.lower() != "e":
+                try:
+                    pass_user = int(pass_user)
+                    pass_user = list(users.keys())[pass_user]
+                    password = getpass.getpass("Enter New Password: ")
+                    pass_two = getpass.getpass("Confirm New Password: ")
+                    if password != pass_two:
+                        print("Passwords don't match!")
+                    else:
+                        users[pass_user]["password"] = password
+                except ValueError:
+                    print("NaN!")
+
+
     print("Writing DB...")
     write_db()
     sys.exit(0)

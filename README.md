@@ -14,7 +14,7 @@ I don't entirely know what I'm doing, and this program has a form of authenticat
 
 ## Folders
 
-`central-server`: Contains the central server program. Used to receive computer status data from other computers and distribute it to clients.
+`central-server`: Contains the central server program. Used to receive computer status data from other computers and distribute it to clients. Also contains `user_manager.py`, for managing users on the server.
 
 `server`: Contains the server program used. This should be run on computers that resources should be monitored on. The IP address requested on first run should point to the computer running `central-server`.
 
