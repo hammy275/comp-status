@@ -21,6 +21,7 @@ import string
 from secrets import choice, token_urlsafe
 import json
 import sys
+import bcrypt
 
 try:
     with open("users.json") as f:
@@ -115,7 +116,7 @@ def get_token(user, password):
     """
     time.sleep(1)
     try:
-        if users[user]["password"] == password:
+        if bcrypt.checkpw(password.encode('utf-8'), users[user]["password"].encode("utf-8")):
             token = gen_token()
             tokens[token] = {"time": time.time(), "user": user, "permissions": users[user]["permissions"]}
             return {"message": "Generated token!", "token": token}

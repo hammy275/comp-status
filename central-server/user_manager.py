@@ -3,6 +3,7 @@
 import json
 import getpass
 import sys
+import bcrypt
 
 try:
     with open("users.json") as f:
@@ -47,7 +48,7 @@ def main():
                     for perm in all_perms:
                         if get_input("Give {} the permission {}? [y/N] ".format(user, perm), ["y", "n"], "n") == "y":
                             new_user_perms.append(perm)
-                    users.update({user: {"password": password, "permissions": new_user_perms}})
+                    users.update({user: {"password": bcrypt.hashpw(password.encode('utf-8'), bcrypt.gensalt()).decode("utf-8"), "permissions": new_user_perms}})
         elif opt == "2":
             print("\n\n")
             c = 0
@@ -77,7 +78,7 @@ def main():
                     if password != pass_two:
                         print("Passwords don't match!")
                     else:
-                        users[pass_user]["password"] = password
+                        users[pass_user]["password"] = bcrypt.hashpw(password.encode('utf-8'), bcrypt.gensalt()).decode("utf-8")
                 except ValueError:
                     print("NaN!")
 

@@ -5,7 +5,7 @@ A small utility to get processor usage, RAM usage, etc. from computers.
 
 ## WARNING
 
-I don't entirely know what I'm doing, and this program has a form of authentication with __no__ encryption outside of using HTTPS to communicate. I have no idea if I'll even be adding encryption or not, because it's really beyond my scope of knowledge. Either way, __DO NOT USE THIS SOFTWARE IN ANY REMOTELY IMPORTANT ENVIRONMENT__ (unless you're willing to take the risk and/or know what you're doing).
+Although this program does use bcrypt to store passwords, and communication is done over a dummy HTTPS certificate, I would highly recommend NOT using this program without inspecting `auth.py` and `user_manager.py` and seeing for yourself if it's secure enough. I'm just one person, and this is my first program to do any form of password storage, so I have my doubts it's done properly.
 
 ## Requirements
 
