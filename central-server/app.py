@@ -43,7 +43,7 @@ def auth_request():
         JSON: JSON data to return to client, whether it be requested data or alerting of lack of authorization.
 
     """
-    data = request.form.to_dict()
+    data = request.get_json()
     try:
         if data["auth"] == "password":
             return auth.get_token(data["user"], data["password"])
@@ -71,7 +71,7 @@ def ping():
 
 @app.route("/take_data", methods=["POST"])
 def take_data():
-    data = request.form.to_dict()
+    data = request.get_json()
     pc_name = data["pc_name"]
     data.pop("pc_name")
     data["time"] = int(time.time())
@@ -81,7 +81,7 @@ def take_data():
 
 @app.route("/get_tokens", methods=["POST"])
 def get_tokens():
-    data = request.form.to_dict()
+    data = request.get_json()
     if auth.check_permission(data["token"], "revoke_tokens"):
         return jsonify({"tokens": auth.get_tokens(), "message": "Tokens successfully retrieved!"})
     else:
@@ -90,7 +90,7 @@ def get_tokens():
 
 @app.route("/delete_token", methods=["POST"])
 def delete_token():
-    data = request.form.to_dict()
+    data = request.get_json()
     if auth.check_permission(data["token"], "revoke_tokens"):
         try:
             return jsonify(auth.delete_token(data["token_to_delete"]))

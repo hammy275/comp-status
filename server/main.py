@@ -53,14 +53,14 @@ def post_with_auth(url, inp_data={}):
     global token
     if token is None:
         auth_data = {"user": settings["user"], "password": settings["password"], "auth": "password"}
-        r = requests.post(url, data=auth_data, verify=verify_requests)
+        r = requests.post(url, json=auth_data, verify=verify_requests)
         data = json.loads(r.text)
         if data["message"] == "Unauthorized!":
             return {"message": "Unauthorized!", "error": -1}
         elif data["message"] == "Generated token!":
             token = data["token"]
     inp_data.update({"token": token, "auth": "token"})
-    r = requests.post(url, data=inp_data, verify=verify_requests)
+    r = requests.post(url, json=inp_data, verify=verify_requests)
     data = json.loads(r.text)
     if data["message"] == "Unauthorized!":
         token = None
