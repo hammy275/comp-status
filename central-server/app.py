@@ -43,6 +43,10 @@ def auth_request():
         JSON: JSON data to return to client, whether it be requested data or alerting of lack of authorization.
 
     """
+    if request.method == "GET":
+        return
+    elif request.method != "POST":
+        return {"message": "Server exists!"}
     data = request.get_json()
     try:
         if data["auth"] == "password":
@@ -59,12 +63,26 @@ def auth_request():
         return {"message": "Unauthorized!"}, 401
 
 
-@app.route("/give_data", methods=["GET", "POST"])
+@app.after_request
+def after_request(response):
+  response.headers.add('Access-Control-Allow-Headers', 'Content-Type,Authorization')
+  response.headers.add('Access-Control-Allow-Methods', 'GET,PUT,POST,DELETE,OPTIONS')
+  response.headers.add('Access-Control-Allow-Credentials', 'true')
+  response.headers.add('Access-Control-Allow-Origin', '*')
+  return response
+
+
+@app.route("/", methods=["GET"])
+def index():
+    return "There's no webpage here, yet!"
+
+
+@app.route("/give_data", methods=["POST"])
 def give_data():
     return jsonify({"message": "Data successfully received!", "data" : db})
 
 
-@app.route("/ping", methods=["GET", "POST"])
+@app.route("/ping", methods=["POST"])
 def ping():
     return jsonify({"message": "Pong!"})
 
