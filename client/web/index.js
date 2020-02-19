@@ -1,4 +1,21 @@
 let token = null;
+let oldComputers = null;
+let computerData = null;
+
+function equalArrays(a, b) {
+    if (a === b) {
+        return true;
+    }
+    if (a === null || b === null || a.length !== b.length) {
+        return false;
+    }
+    for (let i = 0; i < a.length; i++) {
+        if (a[i] !== b[i]) {
+            return false;
+        }
+    }
+    return true;
+}
 
 function httpPost(url, data) {
     // Get ready to send HTTP POST request, and define a function to run when sent.
@@ -17,7 +34,7 @@ function httpPost(url, data) {
                             "Maybe the server is down, or your browser doesn't trust the cert!"})
                 }
             }
-        }
+        };
         xhr.send(JSON.stringify(data));
     })
 }
@@ -31,6 +48,7 @@ function confirmAuth(returned, url, data, endFunction) {
     } else if (returned["message"] === "Unauthorized!") {
         document.getElementById("statusMessage").innerHTML = "Invalid username/password!";
         document.getElementById("statusMessage").style.color = "#FF0000";
+        token = null;
     } else if (returned["error"] !== 200) {
         document.getElementById("statusMessage").innerHTML = returned["message"];
         document.getElementById("statusMessage").style.color = "#FF0000";
@@ -48,7 +66,7 @@ function postWithAuth(url, data, endFunction, username, password) {
         );
     }
     else {
-        let authData = {"token": token, "auth": "token"}
+        let authData = {"token": token, "auth": "token"};
         httpPost(url, Object.assign({}, authData, data)).then(
             value => {confirmAuth(value, url, data, endFunction)}
         );
@@ -65,7 +83,37 @@ function getComputerData() {
 function endGetComputerData(returned) {
     document.getElementById("statusMessage").innerHTML = returned["message"];
     document.getElementById("statusMessage").style.color = "#000000";
-    console.log(returned);
+    computerData = returned["data"];
+    let keys = Object.keys(computerData);
+    if (oldComputers === null || !equalArrays(oldComputers, keys)) {
+        oldComputers = keys;
+        let dropdown = document.getElementById("computerDropdown");
+        for (let i = dropdown.options.length-1; i >= 0; i--) {
+            dropdown.options[i] = null;
+        }
+        for (let i = 0; i < keys.length; i++) {
+            let option = document.createElement("option");
+            option.text = keys[i];
+            dropdown.add(option);
+        }
+    }
+    renderComputerInfo();
+}
+
+function renderComputerInfo() {
+    let selectedItem = document.getElementById("computerDropdown");
+    selectedItem = selectedItem.options[selectedItem.selectedIndex].text;
+    let cd = computerData[selectedItem];
+    let mem_usage = (cd["used_memory"] / cd["current_memory"] * 100).toFixed(1);
+    let dataToShow =
+`
+${selectedItem}:<br>
+<br>
+Memory: ${cd["used_memory"]} GB/${cd["current_memory"]} GB (${mem_usage}% usage)<br>
+CPU Stats: ${cd["cpu_usage"]}% Usage at ${cd["cpu_pack_temp"]}°C<br>
+Turbo: ${cd["current_turbo"]} GHz/${cd["max_turbo"]} GHz<br>
+`;
+    document.getElementById("computerInfo").innerHTML = dataToShow;
 }
 
 window.setInterval(getComputerData, 1000);
