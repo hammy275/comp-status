@@ -90,6 +90,8 @@ def ping():
 @app.route("/take_data", methods=["POST"])
 def take_data():
     data = request.get_json()
+    del data["auth"]
+    del data["token"]
     pc_name = data["pc_name"]
     data.pop("pc_name")
     data["time"] = int(time.time())
