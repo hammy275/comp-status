@@ -105,6 +105,8 @@ function renderComputerInfo() {
     selectedItem = selectedItem.options[selectedItem.selectedIndex].text;
     let cd = computerData[selectedItem];
     let mem_usage = (cd["used_memory"] / cd["current_memory"] * 100).toFixed(1);
+    let cpuTemps = cd["cpu_temps"].split(",").join("°C, ") + "°C";
+    let cpuUsages = cd["cpu_usages"].split(",").join("%, ") + "%";
     let dataToShow =
 `
 ${selectedItem}:<br>
@@ -112,6 +114,8 @@ ${selectedItem}:<br>
 Memory: ${cd["used_memory"]} GB/${cd["current_memory"]} GB (${mem_usage}% usage)<br>
 CPU Stats: ${cd["cpu_usage"]}% Usage at ${cd["cpu_pack_temp"]}°C<br>
 Turbo: ${cd["current_turbo"]} GHz/${cd["max_turbo"]} GHz<br>
+Individual CPU Temperatures: ${cpuTemps}<br>
+Individual CPU Usages: ${cpuUsages}
 `;
     document.getElementById("computerInfo").innerHTML = dataToShow;
 }
