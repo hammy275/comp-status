@@ -1,0 +1,28 @@
+body {
+    background-color: #202020;
+}
+
+p {
+    color: #9f9f9f;
+}
+
+h1 {
+    color: #9f9f9f;
+}
+
+label {
+    color: #9f9f9f;
+}
+
+input {
+    background-color: #202020;
+    color: #9f9f9f;
+    border-color: #9f9f9f;
+}
+
+select {
+    background-color: #202020;
+    color: #9f9f9f;
+    border-color: #9f9f9f;
+}
+

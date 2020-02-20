@@ -82,7 +82,7 @@ function getComputerData() {
 
 function endGetComputerData(returned) {
     document.getElementById("statusMessage").innerHTML = returned["message"];
-    document.getElementById("statusMessage").style.color = "#000000";
+    document.getElementById("statusMessage").style.color = "#9f9f9f";
     computerData = returned["data"];
     let keys = Object.keys(computerData);
     if (oldComputers === null || !equalArrays(oldComputers, keys)) {
