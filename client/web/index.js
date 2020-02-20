@@ -104,20 +104,36 @@ function renderComputerInfo() {
     let selectedItem = document.getElementById("computerDropdown");
     selectedItem = selectedItem.options[selectedItem.selectedIndex].text;
     let cd = computerData[selectedItem];
-    let mem_usage = (cd["used_memory"] / cd["current_memory"] * 100).toFixed(1);
+    let memUsage = (cd["used_memory"] / cd["current_memory"] * 100).toFixed(1);
     let cpuTemps = cd["cpu_temps"].split(",").join("°C, ") + "°C";
     let cpuUsages = cd["cpu_usages"].split(",").join("%, ") + "%";
-    let dataToShow =
-`
-${selectedItem}:<br>
-<br>
-Memory: ${cd["used_memory"]} GB/${cd["current_memory"]} GB (${mem_usage}% usage)<br>
-CPU Stats: ${cd["cpu_usage"]}% Usage at ${cd["cpu_pack_temp"]}°C<br>
-Turbo: ${cd["current_turbo"]} GHz/${cd["max_turbo"]} GHz<br>
-Individual CPU Temperatures: ${cpuTemps}<br>
-Individual CPU Usages: ${cpuUsages}
-`;
-    document.getElementById("computerInfo").innerHTML = dataToShow;
+    document.getElementById("pcName").innerHTML = `${selectedItem}:`;
+    document.getElementById("RAMInfo").innerHTML = `Memory: ${cd["used_memory"]} GB/${cd["current_memory"]} GB (${memUsage}% usage)`;
+    document.getElementById("CPUInfo").innerHTML = `CPU Stats: ${cd["cpu_usage"]}% Usage at ${cd["cpu_pack_temp"]}°C"`;
+    document.getElementById("turboInfo").innerHTML = `Turbo: ${cd["current_turbo"]} GHz/${cd["max_turbo"]} GHz`;
+    document.getElementById("CPUTemps").innerHTML = `Individual CPU Temperatures: ${cpuTemps}`;
+    document.getElementById("CPUBoosts").innerHTML = `Individual CPU Usages: ${cpuUsages}`;
+    if (memUsage <= 70) {
+        document.getElementById("RAMInfo").style.color = "#00AF00";
+    } else if (memUsage >= 90) {
+        document.getElementById("RAMInfo").style.color = "#CF0000";
+    } else {
+        document.getElementById("RAMInfo").style.color = "#9F9F00";
+    }
+    if (cd["cpu_usage"] >= 90 || cd["cpu_pack_temp"] >= 82) {
+        document.getElementById("CPUInfo").style.color = "#CF0000";
+    } else if (cd["cpu_usage"] >= 70 || cd["cpu_pack_temp"] >= 70) {
+        document.getElementById("CPUInfo").style.color = "#9F9F00";
+    } else {
+        document.getElementById("CPUInfo").style.color = "#00AF00";
+    }
+    if (cd["cpu_pack_temp"] >= 82) {
+        document.getElementById("CPUTemps").style.color = "#CF0000";
+    } else if (cd["cpu_pack_temp"] >= 70) {
+        document.getElementById("CPUTemps").style.color = "#9F9F00";
+    } else {
+        document.getElementById("CPUTemps").style.color = "#00AF00";
+    }
 }
 
 window.setInterval(getComputerData, 1000);
