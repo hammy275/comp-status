@@ -1,0 +1,1 @@
+{"users": {"TestUser": {"password": "$2b$12$mmFEm.eT7dgX5I0wlDmc1OEOfQ2ZZmWU2Fek6P3jcJbNu1jqqCwyW", "permissions": ["revoke_tokens"]}}, "port": 5000, "version": 2}

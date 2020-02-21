@@ -24,10 +24,10 @@ import sys
 import bcrypt
 
 try:
-    with open("users.json") as f:
-        users = json.load(f)
+    with open("db.json") as f:
+        users = json.load(f)["users"]
 except (json.decoder.JSONDecodeError, FileNotFoundError):
-    print("users.json does not exist! Please run user_manager.py, and configure at least 1 user!")
+    print("db.json does not exist! Please run server_manager.py (and configure a user if one has not already been)!")
     sys.exit(1)
 
 expire_time = 60*60*24  # Time in seconds until a token expires

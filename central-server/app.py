@@ -21,10 +21,20 @@
 from flask import Flask, jsonify, request
 import time
 import auth
+import json
+
+with open("db.json") as f:  # Error handling for this is done in "auth"
+    config = json.load(f)
 
 app = Flask(__name__)
 
 db = {}
+
+try:
+    port = config["port"]
+except KeyError:
+    print("No port in config! Defaulting to 5000...")
+    port = 5000
 
 @app.errorhandler(404)
 def no_page(e):
@@ -121,4 +131,4 @@ def delete_token():
 
 
 if __name__ == "__main__":
-    app.run("0.0.0.0", 5000,ssl_context="adhoc")
+    app.run("0.0.0.0", port, ssl_context="adhoc")
