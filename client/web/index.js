@@ -2,6 +2,38 @@ let token = null;
 let oldComputers = null;
 let computerData = null;
 
+function setCookie(name, value, expires, bypassNoCookie) {
+    let useCookies = document.getElementById("useCookies");
+    if (useCookies.checked || bypassNoCookie) {
+        let d = new Date();
+        if (expires) {
+            d.setTime(d.getTime() + expires);
+        } else {
+            d.setTime(d.getTime() + (1000 * 60 * 60 * 24));
+        }
+        document.cookie = `${name}=${value};expires=${d.toUTCString()};path=/`;
+    }
+}
+
+function delCookie(name) {
+    document.cookie = `${name}=; expires=Thu, 01 Jan 1970 00:00:00 UTC; path=/;`;
+}
+
+function readCookie(name, def_value) {
+    //Probably a better way to implement this
+    let cookieList = document.cookie.split(";");
+    for (let i = 0; i < cookieList.length; i++) {
+        if (cookieList[i].startsWith(`${name}=`)) {
+            let toStart = `${name}=`.length;
+            return cookieList[i].substring(toStart, cookieList[i].length);
+        } else if (cookieList[i].startsWith(` ${name}=`)) {
+            let toStart = ` ${name}=`.length;
+            return cookieList[i].substring(toStart, cookieList[i].length);
+        }
+    }
+    return def_value
+}
+
 function equalArrays(a, b) {
     if (a === b) {
         return true;
@@ -42,6 +74,7 @@ function httpPost(url, data) {
 function confirmAuth(returned, url, data, endFunction) {
     if (returned["message"] === "Generated token!") {
         token = returned["token"];
+        setCookie("token", token);
         postWithAuth(url, data, endFunction);
     } else if (returned["message"] === "Data successfully received!") {
         endFunction(returned)
@@ -49,11 +82,13 @@ function confirmAuth(returned, url, data, endFunction) {
         document.getElementById("statusMessage").innerHTML = "Invalid username/password!";
         document.getElementById("statusMessage").style.color = "#FF0000";
         token = null;
+        delCookie("token");
     } else if (returned["error"] !== 200) {
         document.getElementById("statusMessage").innerHTML = returned["message"];
         document.getElementById("statusMessage").style.color = "#FF0000";
     } else if (returned["message"] === "Token expired!") {
         token = null;
+        delCookie("token");
         postWithAuth(url, data, endFunction);
     }
 }
@@ -67,6 +102,7 @@ function postWithAuth(url, data, endFunction, username, password) {
     }
     else {
         let authData = {"token": token, "auth": "token"};
+        setCookie("username", username);
         httpPost(url, Object.assign({}, authData, data)).then(
             value => {confirmAuth(value, url, data, endFunction)}
         );
@@ -75,6 +111,7 @@ function postWithAuth(url, data, endFunction, username, password) {
 
 function getComputerData() {
     let ip = document.getElementById("ip").value;
+    setCookie("ipAddress", ip);
     let username = document.getElementById("username").value;
     let password = document.getElementById("password").value;
     postWithAuth("https://" + ip + "/give_data", {}, endGetComputerData, username, password);
@@ -82,7 +119,7 @@ function getComputerData() {
 
 function endGetComputerData(returned) {
     document.getElementById("statusMessage").innerHTML = returned["message"];
-    document.getElementById("statusMessage").style.color = "#9f9f9f";
+    document.getElementById("statusMessage").style.color = "#bfbfbf";
     computerData = returned["data"];
     let keys = Object.keys(computerData);
     if (oldComputers === null || !equalArrays(oldComputers, keys)) {
@@ -112,7 +149,7 @@ function renderComputerInfo() {
     document.getElementById("CPUInfo").innerHTML = `CPU Stats: ${cd["cpu_usage"]}% Usage at ${cd["cpu_pack_temp"]}°C"`;
     document.getElementById("turboInfo").innerHTML = `Turbo: ${cd["current_turbo"]} GHz/${cd["max_turbo"]} GHz`;
     document.getElementById("CPUTemps").innerHTML = `Individual CPU Temperatures: ${cpuTemps}`;
-    document.getElementById("CPUBoosts").innerHTML = `Individual CPU Usages: ${cpuUsages}`;
+    document.getElementById("CPUUsages").innerHTML = `Individual CPU Usages: ${cpuUsages}`;
     if (memUsage <= 70) {
         document.getElementById("RAMInfo").style.color = "#00AF00";
     } else if (memUsage >= 90) {
@@ -134,6 +171,50 @@ function renderComputerInfo() {
     } else {
         document.getElementById("CPUTemps").style.color = "#00AF00";
     }
+    if (cd["cpu_usage"] >= 90) {
+        document.getElementById("CPUUsages").style.color = "#CF0000";
+    } else if (cd["cpu_usage"] >= 70) {
+        document.getElementById("CPUUsages").style.color = "#9F9F00";
+    } else {
+        document.getElementById("CPUUsages").style.color = "#00AF00";
+    }
+}
+
+function wipeCookies() {
+    delCookie("ipAddress");
+    delCookie("username");
+    delCookie("token");
+}
+
+function useCookiesFunction(checkbox) {
+    if (!checkbox.checked) {
+        setCookie("useCookies", "false", null, true);
+        wipeCookies();
+    } else {
+        setCookie("useCookies", "true");
+    }
+}
+
+ipFromCookie = readCookie("ipAddress");
+console.log(ipFromCookie);
+if (ipFromCookie) {
+    document.getElementById("ip").value=ipFromCookie;
+}
+
+usernameFromCookie = readCookie("username");
+if (usernameFromCookie) {
+    document.getElementById("username").value=usernameFromCookie;
+}
+
+tokenFromCookie = readCookie("token");
+if (tokenFromCookie) {
+    token = tokenFromCookie;
+}
+
+useCookiesFromCookie = readCookie("useCookies");
+if (useCookiesFromCookie === "false") {
+    wipeCookies();
+    document.getElementById("useCookies").checked = false;
 }
 
 window.setInterval(getComputerData, 1000);

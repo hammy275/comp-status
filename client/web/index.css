@@ -3,26 +3,26 @@ body {
 }
 
 p {
-    color: #9f9f9f;
+    color: #bfbfbf;
 }
 
 h1 {
-    color: #9f9f9f;
+    color: #bfbfbf;
 }
 
 label {
-    color: #9f9f9f;
+    color: #bfbfbf;
 }
 
 input {
     background-color: #202020;
-    color: #9f9f9f;
-    border-color: #9f9f9f;
+    color: #bfbfbf;
+    border-color: #bfbfbf;
 }
 
 select {
     background-color: #202020;
-    color: #9f9f9f;
-    border-color: #9f9f9f;
+    color: #bfbfbf;
+    border-color: #bfbfbf;
 }
 
