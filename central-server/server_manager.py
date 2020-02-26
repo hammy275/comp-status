@@ -15,7 +15,7 @@ except (json.decoder.JSONDecodeError, FileNotFoundError):
         with open("users.json") as f:
             db = json.load(f)
     except (json.decoder.JSONDecodeError, FileNotFoundError):
-        db = {"version": config_version, "users": {}}
+        db = {"version": config_version, "users": {}, "port": 5000}
 
 
 def upgrade_db():
