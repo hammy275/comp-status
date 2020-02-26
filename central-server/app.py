@@ -18,7 +18,7 @@
     along with this program.  If not, see <https://www.gnu.org/licenses/>.
 """
 
-from flask import Flask, jsonify, request
+from flask import Flask, jsonify, request, render_template
 import time
 import auth
 import json
@@ -84,7 +84,7 @@ def after_request(response):
 
 @app.route("/", methods=["GET"])
 def index():
-    return "There's no webpage here, yet!"
+    return render_template("index.html")
 
 
 @app.route("/give_data", methods=["POST"])
