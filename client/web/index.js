@@ -1,10 +1,10 @@
 let token = null;
 let oldComputers = null;
 let computerData = null;
+let useCookies = true;
 
 function setCookie(name, value, expires, bypassNoCookie) {
-    let useCookies = document.getElementById("useCookies");
-    if (useCookies.checked || bypassNoCookie) {
+    if (useCookies || bypassNoCookie) {
         let d = new Date();
         if (expires) {
             d.setTime(d.getTime() + expires);
@@ -80,12 +80,12 @@ function confirmAuth(returned, url, data, endFunction) {
         endFunction(returned)
     } else if (returned["message"] === "Unauthorized!") {
         document.getElementById("statusMessage").innerHTML = "Invalid username/password!";
-        document.getElementById("statusMessage").style.color = "#FF0000";
+        document.getElementById("statusMessageDiv").className = "notification is-danger";
         token = null;
         delCookie("token");
     } else if (returned["error"] !== 200) {
         document.getElementById("statusMessage").innerHTML = returned["message"];
-        document.getElementById("statusMessage").style.color = "#FF0000";
+        document.getElementById("statusMessageDiv").className = "notification is-danger";
     } else if (returned["message"] === "Token expired!") {
         token = null;
         delCookie("token");
@@ -119,7 +119,7 @@ function getComputerData() {
 
 function endGetComputerData(returned) {
     document.getElementById("statusMessage").innerHTML = returned["message"];
-    document.getElementById("statusMessage").style.color = "#bfbfbf";
+    document.getElementById("statusMessageDiv").className = "notification is-info";
     computerData = returned["data"];
     let keys = Object.keys(computerData);
     if (oldComputers === null || !equalArrays(oldComputers, keys)) {
@@ -151,33 +151,35 @@ function renderComputerInfo() {
     document.getElementById("CPUTemps").innerHTML = `Individual CPU Temperatures: ${cpuTemps}`;
     document.getElementById("CPUUsages").innerHTML = `Individual CPU Usages: ${cpuUsages}`;
     if (memUsage <= 70) {
-        document.getElementById("RAMInfo").style.color = "#00AF00";
+        document.getElementById("RAMInfoSection").className = "hero is-small is-success";
     } else if (memUsage >= 90) {
-        document.getElementById("RAMInfo").style.color = "#CF0000";
+        document.getElementById("RAMInfoSection").className = "hero is-small is-warning";
     } else {
-        document.getElementById("RAMInfo").style.color = "#9F9F00";
+        document.getElementById("RAMInfoSection").className = "hero is-small is-danger";
     }
     if (cd["cpu_usage"] >= 90 || cd["cpu_pack_temp"] >= 82) {
-        document.getElementById("CPUInfo").style.color = "#CF0000";
+        document.getElementById("CPUInfoSection").className = "hero is-small is-warning";
     } else if (cd["cpu_usage"] >= 70 || cd["cpu_pack_temp"] >= 70) {
-        document.getElementById("CPUInfo").style.color = "#9F9F00";
+        document.getElementById("CPUInfoSection").className = "hero is-small is-danger";
     } else {
-        document.getElementById("CPUInfo").style.color = "#00AF00";
+        document.getElementById("CPUInfoSection").className = "hero is-small is-success";
     }
     if (cd["cpu_pack_temp"] >= 82) {
-        document.getElementById("CPUTemps").style.color = "#CF0000";
+        document.getElementById("CPUTempsSection").className = "hero is-small is-warning";
     } else if (cd["cpu_pack_temp"] >= 70) {
-        document.getElementById("CPUTemps").style.color = "#9F9F00";
+        document.getElementById("CPUTempsSection").className = "hero is-small is-danger";
     } else {
-        document.getElementById("CPUTemps").style.color = "#00AF00";
+        document.getElementById("CPUTempsSection").className = "hero is-small is-success";
     }
     if (cd["cpu_usage"] >= 90) {
-        document.getElementById("CPUUsages").style.color = "#CF0000";
+        document.getElementById("CPUUsagesSection").className = "hero is-small is-warning";
     } else if (cd["cpu_usage"] >= 70) {
-        document.getElementById("CPUUsages").style.color = "#9F9F00";
+        document.getElementById("CPUUsagesSection").className = "hero is-small is-danger";
     } else {
-        document.getElementById("CPUUsages").style.color = "#00AF00";
+        document.getElementById("CPUUsagesSection").className = "hero is-small is-success";
     }
+    document.getElementById("turboInfoSection").className = "hero is-small is-success";
+    document.getElementById("pcNameSection").className = "hero is-small is-black";
 }
 
 function wipeCookies() {
@@ -186,17 +188,19 @@ function wipeCookies() {
     delCookie("token");
 }
 
-function useCookiesFunction(checkbox) {
-    if (!checkbox.checked) {
+function useCookiesFunction() {
+    if (useCookies) {
         setCookie("useCookies", "false", null, true);
         wipeCookies();
+        document.getElementById("useCookies").className = "button is-danger";
     } else {
         setCookie("useCookies", "true");
+        document.getElementById("useCookies").className = "button is-success";
     }
+    useCookies = !useCookies;
 }
 
 ipFromCookie = readCookie("ipAddress");
-console.log(ipFromCookie);
 if (ipFromCookie) {
     document.getElementById("ip").value=ipFromCookie;
 }
@@ -214,7 +218,8 @@ if (tokenFromCookie) {
 useCookiesFromCookie = readCookie("useCookies");
 if (useCookiesFromCookie === "false") {
     wipeCookies();
-    document.getElementById("useCookies").checked = false;
+    useCookies = false;
+    document.getElementById("useCookies").className = "button is-danger";
 }
 
 window.setInterval(getComputerData, 1000);
