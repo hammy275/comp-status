@@ -36,6 +36,11 @@ except KeyError:
     print("No port in config! Defaulting to 5000...")
     port = 5000
 
+try:
+    domain = config["domain"]
+except KeyError:
+    domain = None
+
 @app.errorhandler(404)
 def no_page(e):
     return jsonify({"message": "Endpoint not found!"}), 404

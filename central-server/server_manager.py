@@ -58,7 +58,7 @@ def get_input(question, options, default=None):
 def settings_manager():
     opt = ""
     while opt != "0" and opt.lower() != "e":
-        opt = get_input("1 - Change Port (currently {})\n0/e - Exit\n".format(db["port"]), ["1", "0", "e"])
+        opt = get_input("1 - Change Port (currently {})\n2 - Set Domain Name\n0/e - Exit\n".format(db["port"]), ["1", "2", "0", "e"])
         if opt == "1":
             new_port = input("Enter a new port number: ")
             try:
@@ -67,6 +67,9 @@ def settings_manager():
                 print("NaN!")
                 continue
             db["port"] = new_port
+        elif opt == "2":
+            domain_name = input("Enter a domain name to use when using \"run_server.py\": ")
+            db["domain"] = domain_name
 
 def user_manager():
     opt = ""
