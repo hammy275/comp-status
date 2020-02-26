@@ -152,7 +152,7 @@ def main_loop():
         cpu_temps = ",".join(cpu_temps[1:])
 
         try:
-            post_with_auth("https://localhost:5000/take_data", {
+            post_with_auth("https://{}/take_data".format(settings["ip"]), {
                 "pc_name": pc_name,
                 "current_memory": current_memory, "used_memory": used_memory,
                 "cpu_usage": cpu_usage, "current_turbo": current_turbo, "max_turbo": max_turbo,
