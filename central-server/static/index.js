@@ -146,35 +146,35 @@ function renderComputerInfo() {
     let cpuUsages = cd["cpu_usages"].split(",").join("%, ") + "%";
     document.getElementById("pcName").innerHTML = `${selectedItem}:`;
     document.getElementById("RAMInfo").innerHTML = `Memory: ${cd["used_memory"]} GB/${cd["current_memory"]} GB (${memUsage}% usage)`;
-    document.getElementById("CPUInfo").innerHTML = `CPU Stats: ${cd["cpu_usage"]}% Usage at ${cd["cpu_pack_temp"]}°C"`;
+    document.getElementById("CPUInfo").innerHTML = `CPU Stats: ${cd["cpu_usage"]}% Usage at ${cd["cpu_pack_temp"]}°C`;
     document.getElementById("turboInfo").innerHTML = `Turbo: ${cd["current_turbo"]} GHz/${cd["max_turbo"]} GHz`;
     document.getElementById("CPUTemps").innerHTML = `Individual CPU Temperatures: ${cpuTemps}`;
     document.getElementById("CPUUsages").innerHTML = `Individual CPU Usages: ${cpuUsages}`;
     if (memUsage <= 70) {
         document.getElementById("RAMInfoSection").className = "hero is-small is-success";
     } else if (memUsage >= 90) {
-        document.getElementById("RAMInfoSection").className = "hero is-small is-warning";
-    } else {
         document.getElementById("RAMInfoSection").className = "hero is-small is-danger";
+    } else {
+        document.getElementById("RAMInfoSection").className = "hero is-small is-warning";
     }
     if (cd["cpu_usage"] >= 90 || cd["cpu_pack_temp"] >= 82) {
-        document.getElementById("CPUInfoSection").className = "hero is-small is-warning";
-    } else if (cd["cpu_usage"] >= 70 || cd["cpu_pack_temp"] >= 70) {
         document.getElementById("CPUInfoSection").className = "hero is-small is-danger";
+    } else if (cd["cpu_usage"] >= 70 || cd["cpu_pack_temp"] >= 70) {
+        document.getElementById("CPUInfoSection").className = "hero is-small is-warning";
     } else {
         document.getElementById("CPUInfoSection").className = "hero is-small is-success";
     }
     if (cd["cpu_pack_temp"] >= 82) {
-        document.getElementById("CPUTempsSection").className = "hero is-small is-warning";
-    } else if (cd["cpu_pack_temp"] >= 70) {
         document.getElementById("CPUTempsSection").className = "hero is-small is-danger";
+    } else if (cd["cpu_pack_temp"] >= 70) {
+        document.getElementById("CPUTempsSection").className = "hero is-small is-warning";
     } else {
         document.getElementById("CPUTempsSection").className = "hero is-small is-success";
     }
     if (cd["cpu_usage"] >= 90) {
-        document.getElementById("CPUUsagesSection").className = "hero is-small is-warning";
-    } else if (cd["cpu_usage"] >= 70) {
         document.getElementById("CPUUsagesSection").className = "hero is-small is-danger";
+    } else if (cd["cpu_usage"] >= 70) {
+        document.getElementById("CPUUsagesSection").className = "hero is-small is-warning";
     } else {
         document.getElementById("CPUUsagesSection").className = "hero is-small is-success";
     }
