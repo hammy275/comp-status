@@ -102,7 +102,7 @@ function postWithAuth(url, data, endFunction, username, password) {
     }
     else {
         let authData = {"token": token, "auth": "token"};
-        setCookie("username", username);
+        setCookie("username", username, 1000 * 60 * 60 * 24 * 30);
         httpPost(url, Object.assign({}, authData, data)).then(
             value => {confirmAuth(value, url, data, endFunction)}
         );
@@ -111,7 +111,7 @@ function postWithAuth(url, data, endFunction, username, password) {
 
 function getComputerData() {
     let ip = document.getElementById("ip").value;
-    setCookie("ipAddress", ip);
+    setCookie("ipAddress", ip, 1000 * 60 * 60 * 24 * 30);
     let username = document.getElementById("username").value;
     let password = document.getElementById("password").value;
     postWithAuth("https://" + ip + "/give_data", {}, endGetComputerData, username, password);
@@ -191,12 +191,12 @@ function wipeCookies() {
 function useCookiesFunction() {
     if (useCookies) {
         useCookies = false;
-        setCookie("useCookies", "false", null, true);
+        setCookie("useCookies", "false", 1000 * 60 * 60 * 24 * 36500, true);
         wipeCookies();
         document.getElementById("useCookies").className = "button is-danger";
     } else {
         useCookies = true;
-        setCookie("useCookies", "true", null, true);
+        setCookie("useCookies", "true", 1000 * 60 * 60 * 24 * 36500, true);
         document.getElementById("useCookies").className = "button is-success";
     }
 }
