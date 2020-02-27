@@ -57,9 +57,9 @@ function httpPost(url, data) {
         xhr.setRequestHeader("Content-Type", "application/json");
         xhr.onreadystatechange = function () { // Call a function when the state changes.
             if (this.readyState === XMLHttpRequest.DONE ) {
-                if (this.status === 200) {
+                if (this.status === 200 || this.status === 401) {
                     let returned = JSON.parse(xhr.response);
-                    returned["error"] = 200;
+                    returned["error"] = this.status;
                     resolve(returned);
                 } else {
                     resolve({"error": this.status, "message": "Error while contacting provided address! " +
@@ -190,10 +190,12 @@ function wipeCookies() {
 
 function useCookiesFunction() {
     if (useCookies) {
+        useCookies = false;
         setCookie("useCookies", "false", null, true);
         wipeCookies();
         document.getElementById("useCookies").className = "button is-danger";
     } else {
+        useCookies = true;
         setCookie("useCookies", "true");
         document.getElementById("useCookies").className = "button is-success";
     }
