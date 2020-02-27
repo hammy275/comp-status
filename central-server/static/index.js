@@ -196,10 +196,9 @@ function useCookiesFunction() {
         document.getElementById("useCookies").className = "button is-danger";
     } else {
         useCookies = true;
-        setCookie("useCookies", "true");
+        setCookie("useCookies", "true", null, true);
         document.getElementById("useCookies").className = "button is-success";
     }
-    useCookies = !useCookies;
 }
 
 ipFromCookie = readCookie("ipAddress");
@@ -218,6 +217,7 @@ if (tokenFromCookie) {
 }
 
 useCookiesFromCookie = readCookie("useCookies");
+console.log("Reading cookie state...")
 if (useCookiesFromCookie === "false") {
     wipeCookies();
     useCookies = false;
