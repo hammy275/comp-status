@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="en" id="html" class="is-background-white">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -9,7 +9,7 @@
 <body>
     <h1 class="title is-1">Computer Status Information</h1>
     <br>
-    <div class="columns">
+    <div id="columns" class="columns has-background-white">
         <div class="column is-one-quarter">
             <form>
                 <label class="label" for="ip">IP Address (including port!)</label>
@@ -20,6 +20,8 @@
                 <input class="input" type="password" id="password">
                 <label class="label" for="useCookies">Store Login Information in Cookies</label>
                 <button type="button" onclick="useCookiesFunction()" class="button is-success" id="useCookies">Save Information in Cookies</button>
+                <label class="label" for="toggleDark">Toggle Dark Mode</label>
+                <button type="button" onclick="toggleDarkEntry()" class="button">Toggle Dark Mode</button>
             </form>
             <div class="field">
                 <label class="label" for="computerDropdown">Select a Computer:</label>

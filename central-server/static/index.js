@@ -2,6 +2,8 @@ let token = null;
 let oldComputers = null;
 let computerData = null;
 let useCookies = true;
+let isDark = false;
+let sheet = document.createElement("style");
 
 function setCookie(name, value, expires, bypassNoCookie) {
     if (useCookies || bypassNoCookie) {
@@ -201,6 +203,46 @@ function useCookiesFunction() {
     }
 }
 
+function toggleDarkEntry() {
+    toggleDark();
+}
+
+function toggleDark() {
+    if (isDark) {
+        document.getElementById("columns").className = "columns has-background-white";
+        document.getElementById("html").className = "has-background-white";
+        for (elem of document.getElementsByTagName("h1")) {
+            elem.className = "title is-1 has-text-black";
+        }
+        for (elem of document.getElementsByTagName("label")) {
+            elem.className = "label has-text-black";
+        }
+        for (elem of document.getElementsByTagName("button")) {
+            elem.style.color = "";
+        }
+        for (elem of document.getElementsByTagName("p")) {
+            elem.style.color = "";
+        }
+    } else {
+        document.getElementById("columns").className = "columns has-background-dark";
+        document.getElementById("html").className = "has-background-dark";
+        for (elem of document.getElementsByTagName("h1")) {
+            elem.className = "title is-1 has-text-grey-light";
+        }
+        for (elem of document.getElementsByTagName("label")) {
+            elem.className = "label has-text-grey-light";
+        }
+        for (elem of document.getElementsByTagName("button")) {
+            elem.style.color = "#363636";
+        }
+        for (elem of document.getElementsByTagName("p")) {
+            elem.style.color = "#363636";
+        }
+    }
+    isDark = !isDark;
+    setCookie("isDark", isDark.toString(), 1000 * 60 * 60 * 24 * 36500, true)
+}
+
 ipFromCookie = readCookie("ipAddress");
 if (ipFromCookie) {
     document.getElementById("ip").value=ipFromCookie;
@@ -214,6 +256,11 @@ if (usernameFromCookie) {
 tokenFromCookie = readCookie("token");
 if (tokenFromCookie) {
     token = tokenFromCookie;
+}
+
+darkFromCookie = readCookie("isDark");
+if (darkFromCookie === "true") {
+    toggleDark();
 }
 
 useCookiesFromCookie = readCookie("useCookies");
