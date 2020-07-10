@@ -182,6 +182,18 @@ function renderComputerInfo() {
     }
     document.getElementById("turboInfoSection").className = "hero is-small is-success";
     document.getElementById("pcNameSection").className = "hero is-small is-black";
+    let timeDiff = Math.floor(Date.now() / 1000) - cd["time"];
+    if (timeDiff <= 9) {
+        document.getElementById("pcNameSection").className = "hero is-small is-success"
+    } else {
+        document.getElementById("pcName").innerHTML = `${selectedItem} (No response for ${timeDiff} seconds!):`;
+        if (timeDiff <= 59) {
+            document.getElementById("pcNameSection").className = "hero is-small is-warning"
+        } else {
+            document.getElementById("pcNameSection").className = "hero is-small is-danger"
+        }
+    }
+
 }
 
 function wipeCookies() {

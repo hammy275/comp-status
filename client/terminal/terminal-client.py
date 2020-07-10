@@ -207,13 +207,14 @@ def main():
                     t="°C, ".join(ct), c="%, ".join(cp)
                 )
                 last_str += """\n
-{pc}:
+{pc} (last received status was {lasttime} second(s) ago):
 Memory: {cm} GB/{tm} GB ({pm}% Usage)
 CPU Stats: {p}% Usage at {cpt}°C
 Turbo: {cc} GHz/{mc} GHz
 {ics}""".format(pc=pc,cm=d["used_memory"], tm=d["current_memory"], p=d["cpu_usage"],
                 cc=d["current_turbo"], mc=d["max_turbo"], ics=ics, cpt=d["cpu_pack_temp"],
-                pm=str(round(float(d["used_memory"]) / float(d["current_memory"]) * 100, 1) ))
+                pm=str(round(float(d["used_memory"]) / float(d["current_memory"]) * 100, 1) ),
+                lasttime=str(int(time.time() - d["time"])))
         if not loop:
             opt = input("ENTER to refresh, \"t\" to manage tokens or \"l\" to loop resource view.")
             opt = opt.lower()
