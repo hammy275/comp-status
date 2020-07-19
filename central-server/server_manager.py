@@ -23,9 +23,11 @@ def get_config(key):
         return db[key]
     except KeyError:
         if key == "port":
-            return "5000"
+            return 5000
         elif key == "version":
             return config_version
+        elif key == "domain":
+            return example.com
 
 
 def upgrade_db():
@@ -46,7 +48,7 @@ def upgrade_db():
             del remove
         elif db_version == 2:
             print("Upgrading from DB version 2 to 3")
-            new_db = {"users": {}}
+            new_db = {"users": {}, "port": get_config("port"), "domain": get_config("domain")}
             for username in db["users"].keys():
                 new_db["users"][username.lower()] = db["users"][username]
             db = new_db
@@ -74,7 +76,7 @@ def get_input(question, options, default=None):
 def settings_manager():
     opt = ""
     while opt != "0" and opt.lower() != "e":
-        opt = get_input("1 - Change Port (currently {})\n2 - Set Domain Name\n0/e - Exit\n".format(get_config("port")), ["1", "2", "0", "e"])
+        opt = get_input("1 - Change Port (currently {})\n2 - Set Domain Name\n0/e - Exit\n".format(str(get_config("port"))), ["1", "2", "0", "e"])
         if opt == "1":
             new_port = input("Enter a new port number: ")
             try:
