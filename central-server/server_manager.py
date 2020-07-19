@@ -5,7 +5,7 @@ import getpass
 import sys
 import bcrypt
 
-config_version = 2
+config_version = 3
 
 try:
     with open("db.json") as f:
@@ -16,6 +16,16 @@ except (json.decoder.JSONDecodeError, FileNotFoundError):
             db = json.load(f)
     except (json.decoder.JSONDecodeError, FileNotFoundError):
         db = {"version": config_version, "users": {}, "port": 5000}
+
+
+def get_config(key):
+    try:
+        return db[key]
+    except KeyError:
+        if key == "port":
+            return "5000"
+        elif key == "version":
+            return config_version
 
 
 def upgrade_db():
@@ -34,6 +44,12 @@ def upgrade_db():
             from os import remove
             remove("users.json")
             del remove
+        elif db_version == 2:
+            print("Upgrading from DB version 2 to 3")
+            new_db = {"users": {}}
+            for username in db["users"].keys():
+                new_db["users"][username.lower()] = db["users"][username]
+            db = new_db
         db_version += 1
         db["version"] = db_version
         write_db()
@@ -58,7 +74,7 @@ def get_input(question, options, default=None):
 def settings_manager():
     opt = ""
     while opt != "0" and opt.lower() != "e":
-        opt = get_input("1 - Change Port (currently {})\n2 - Set Domain Name\n0/e - Exit\n".format(db["port"]), ["1", "2", "0", "e"])
+        opt = get_input("1 - Change Port (currently {})\n2 - Set Domain Name\n0/e - Exit\n".format(get_config("port")), ["1", "2", "0", "e"])
         if opt == "1":
             new_port = input("Enter a new port number: ")
             try:
@@ -91,7 +107,7 @@ def user_manager():
                     for perm in all_perms:
                         if get_input("Give {} the permission {}? [y/N] ".format(user, perm), ["y", "n"], "n") == "y":
                             new_user_perms.append(perm)
-                    db["users"][user] = {"password": bcrypt.hashpw(password.encode('utf-8'), bcrypt.gensalt()).decode("utf-8"), "permissions": new_user_perms}
+                    db["users"][user.lower()] = {"password": bcrypt.hashpw(password.encode('utf-8'), bcrypt.gensalt()).decode("utf-8"), "permissions": new_user_perms}
         elif opt == "2":
             print("\n\n")
             c = 0

@@ -65,7 +65,7 @@ def auth_request():
     data = request.get_json()
     try:
         if data["auth"] == "password":
-            return auth.get_token(data["user"], data["password"])
+            return auth.get_token(data["user"].lower(), data["password"])
         elif data["auth"] == "token":
             r_data = auth.auth_token(data["token"])
             if r_data != {"message": "Authorized"}:
