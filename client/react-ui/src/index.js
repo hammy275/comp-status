@@ -157,6 +157,8 @@ class ComputerInfo extends React.Component {
             this.setState({token: returned["token"]});
             if (this.state.useCookies) {
                 setCookie("token", this.state.token);
+                setCookie("ipAddress", this.state.ip, 1000*60*60*24*30);
+                setCookie("username", this.state.username, 1000*60*60*24*30);
             }
             this.postWithAuth(url, data, endFunction);
         } else if (returned["message"] === "Data successfully received!") {
