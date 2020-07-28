@@ -119,13 +119,12 @@ class ComputerInfo extends React.Component {
         this.toggleDarkMode = this.toggleDarkMode.bind(this);
         this.confirmAuth = this.confirmAuth.bind(this);
         this.postWithAuth = this.postWithAuth.bind(this);
-        this.getComputerData = this.getComputerData.bind(this);
         this.endGetComputerData = this.endGetComputerData.bind(this);
         this.setComputer = this.setComputer.bind(this);
     }
 
     componentDidMount() {
-        setInterval(this.getComputerData, 1000);
+        setInterval(() => this.postWithAuth("https://" + this.state.ip + "/give_data", {}, this.endGetComputerData), 1000);
     }
 
     // BEGIN BACKEND LOGIC
@@ -194,10 +193,6 @@ class ComputerInfo extends React.Component {
                 value => {this.confirmAuth(value, url, data, endFunction)}
             );
         }
-    }
-
-    getComputerData() {
-        this.postWithAuth("https://" + this.state.ip + "/give_data", {}, this.endGetComputerData);
     }
 
     endGetComputerData(returned) {
