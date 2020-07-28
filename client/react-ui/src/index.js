@@ -1,0 +1,366 @@
+import React from 'react'
+import ReactDOM from 'react-dom'
+
+function setCookie(name, value, expires, bypassNoCookie) {
+    let d = new Date();
+    if (expires) {
+        d.setTime(d.getTime() + expires);
+    } else {
+        d.setTime(d.getTime() + (1000 * 60 * 60 * 24));
+    }
+    document.cookie = `${name}=${value};expires=${d.toUTCString()};path=/`;
+}
+
+function delCookie(name) {
+    document.cookie = `${name}=; expires=Thu, 01 Jan 1970 00:00:00 UTC; path=/;`;
+}
+
+function readCookie(name, def_value) {
+    let cookieList = document.cookie.split(";");
+    for (let i = 0; i < cookieList.length; i++) {
+        if (cookieList[i].startsWith(`${name}=`)) {
+            let toStart = `${name}=`.length;
+            return cookieList[i].substring(toStart, cookieList[i].length);
+        } else if (cookieList[i].startsWith(` ${name}=`)) {
+            let toStart = ` ${name}=`.length;
+            return cookieList[i].substring(toStart, cookieList[i].length);
+        }
+    }
+    return def_value
+}
+
+class Button extends React.Component {
+    constructor(props) {
+        super(props);
+        this.handleClick = this.handleClick.bind(this);
+    }
+    handleClick(event) {
+        this.props.handleClick();
+    }
+    render() {
+        return (
+            <button style={{color: this.props.textColor}} onClick={this.handleClick} className={"button " + this.props.buttonType}>{this.props.value}</button>
+        );
+    }
+}
+
+class InputField extends React.Component {
+    constructor(props) {
+        super(props);
+        this.handleChange = this.handleChange.bind(this);
+    }
+    handleChange(event) {
+        this.props.handleChange(event.target.value);
+    }
+    render() {
+        let value = "";
+        if (this.props.value) {
+            value = this.props.value;
+        }
+        return (
+            <form onSubmit={(event) => event.preventDefault()}>
+                <label className="label" style={{color: this.props.textColor}}>
+                    {this.props.inputText}
+                    <input value={value} style={{backgroundColor: this.props.bgColor, color: this.props.textColor}} className="input" type={this.props.type} onChange={this.handleChange} />
+                </label>
+            </form>
+        )
+    }
+}
+
+class Dropdown extends React.Component {
+    render() {
+        let items = this.props.items;
+        return (
+            <span className="select">
+                <select onChange={this.props.handleChange} className="select">
+                {items.map((item) =>
+                <option key={item}>{item}</option>
+                )}
+            </select>
+            </span>
+        );
+    }
+}
+
+class SmallHero extends React.Component {
+    render() {
+        if (!this.props.isVisible) {
+            return null;
+        }
+        return (
+            <section className={"hero is-small " + this.props.heroType}>
+                <div className="hero-body">
+                    <p className="title" style={{color: this.props.textColor}}>
+                        {this.props.text}
+                    </p>
+                </div>
+            </section>
+        );
+    }
+}
+
+class ComputerInfo extends React.Component {
+    constructor(props) {
+        super(props);
+        let useCookiesFromCookie = readCookie("useCookies") === "true";
+        let isDark = readCookie("isDark") === "true";
+        let ip = readCookie("ipAddress") ? readCookie("ipAddress") : "";
+        let username = readCookie("username") ? readCookie("username") : "";
+        let token = readCookie("token") ? readCookie("token") : "";
+        this.state = {ip: ip, username: username, password: "", isDark: isDark, useCookies: useCookiesFromCookie, token: token,
+        computerData: {}, haveGoodData: false, selectedComputer: null, statusInfo: "Waiting for next cycle...",
+        statusHeroType: "is-info"};
+
+        this.getIP = this.getIP.bind(this);
+        this.getUsername = this.getUsername.bind(this);
+        this.getPassword = this.getPassword.bind(this);
+        this.handleCookieChange = this.handleCookieChange.bind(this);
+        this.toggleDarkMode = this.toggleDarkMode.bind(this);
+        this.confirmAuth = this.confirmAuth.bind(this);
+        this.postWithAuth = this.postWithAuth.bind(this);
+        this.getComputerData = this.getComputerData.bind(this);
+        this.endGetComputerData = this.endGetComputerData.bind(this);
+        this.setComputer = this.setComputer.bind(this);
+    }
+
+    componentDidMount() {
+        setInterval(this.getComputerData, 1000);
+    }
+
+    // BEGIN BACKEND LOGIC
+
+    httpPost(url, data) {
+        // Get ready to send HTTP POST request, and define a function to run when sent.
+        return new Promise(function (resolve) {
+            let xhr = new XMLHttpRequest();
+            xhr.open("POST", url, true);
+            xhr.setRequestHeader("Content-Type", "application/json");
+            xhr.onreadystatechange = function () { // Call a function when the state changes.
+                if (this.readyState === XMLHttpRequest.DONE ) {
+                    if (this.status === 200 || this.status === 401) {
+                        let returned = JSON.parse(xhr.response);
+                        returned["error"] = this.status;
+                        resolve(returned);
+                    } else {
+                        resolve({"error": this.status, "message": "Error while contacting provided address! " +
+                                "Maybe the server is down, or your browser doesn't trust the cert!"})
+                    }
+                }
+            };
+            xhr.send(JSON.stringify(data));
+        })
+    }
+
+    confirmAuth(returned, url, data, endFunction) {
+        if (returned["message"] === "Generated token!") {
+            this.setState({token: returned["token"]});
+            if (this.state.useCookies) {
+                setCookie("token", this.state.token);
+            }
+            this.postWithAuth(url, data, endFunction);
+        } else if (returned["message"] === "Data successfully received!") {
+            this.setState({haveGoodData: true, statusHeroType: "is-success", statusInfo: returned["message"]});
+            endFunction(returned)
+        } else if (returned["message"] === "Unauthorized!") {
+            this.setState({token: null, haveGoodData: false});
+            delCookie("token");
+            this.setState({haveGoodData: false, statusHeroType: "is-danger",
+            statusInfo: "Invalid username/password!"
+        });
+        } else if (returned["error"] !== 200) {
+            this.setState({haveGoodData: false, statusHeroType: "is-danger",
+            statusInfo: "Error while contacting provided address! Maybe the server is down, or your browser doesn't trust the cert!"
+        });
+        } else if (returned["message"] === "Token expired!") {
+            this.setState({token: null});
+            delCookie("token");
+            this.postWithAuth(url, data, endFunction);
+        }
+    }
+    
+    postWithAuth(url, data, endFunction) {
+        if (this.state.token === null) {
+            let authData = {"user": this.state.username, "password": this.state.password, "auth": "password"};
+            this.httpPost(url, authData).then(
+                value => {this.confirmAuth(value, url, data, endFunction)}
+            );
+        }
+        else {
+            let authData = {"token": this.state.token, "auth": "token"};
+            this.httpPost(url, Object.assign({}, authData, data)).then(
+                value => {this.confirmAuth(value, url, data, endFunction)}
+            );
+        }
+    }
+
+    getComputerData() {
+        this.postWithAuth("https://" + this.state.ip + "/give_data", {}, this.endGetComputerData);
+    }
+
+    endGetComputerData(returned) {
+        this.setState({computerData: returned["data"], haveGoodData: true});
+    }
+
+    // END BACKEND LOGIC
+    // BEGIN FRONTEND LOGIC
+
+    getIP(ip) {
+        this.setState({ip: ip});
+        if (this.state.useCookies) {
+            setCookie("ipAddress", ip, 1000*60*60*24*30);
+        }
+    }
+
+    getUsername(username) {
+        this.setState({username: username});
+        if (this.state.useCookies) {
+            setCookie("username", username, 1000*60*60*24*30);
+        }
+    }
+
+    getPassword(password) {
+        this.setState({password: password});
+    }
+
+    handleCookieChange() {
+        this.setState(function(state) {
+            return {useCookies: !state.useCookies}
+        });
+        setCookie("useCookies", (!this.state.useCookies).toString(), 1000*60*60*24*36500);
+        if (this.state.useCookies) {
+            delCookie("ipAddress");
+            delCookie("username");
+            delCookie("token");
+        }
+    }
+
+    toggleDarkMode() {
+        setCookie("isDark", (!this.state.isDark).toString(), 1000 * 60 * 60 * 24 * 36500, true);
+        this.setState(function(state) {
+            return {isDark: !state.isDark}
+        });
+    }
+
+    setComputer(event) {
+        this.setState({selectedComputer: event.target.value});
+    }
+
+    render() {
+        let textColor;
+        let backgroundColor;
+        let backgroundStyle;
+        let buttonTextColor;
+        if (this.state.isDark) {
+            textColor = "#7f7f7f";
+            backgroundColor = "#363636";
+            backgroundStyle = "has-background-dark";
+            buttonTextColor = backgroundColor;
+        } else {
+            textColor = "#000000";
+            backgroundColor = "#ffffff";
+            backgroundStyle = "has-background-white";
+            buttonTextColor = backgroundColor;
+        }
+        document.body.style.className = backgroundStyle;
+        document.getElementById("html").setAttribute("class", backgroundStyle);
+
+        let showStatuses = false;
+        let computers = ["Select a computer..."];
+        let ramInfo = "";
+        let cpuInfo = "";
+        let cpuTemps = "";
+        let cpuUsages = "";
+        let turboInfo = "";
+        let pcInfo = "";
+        let pcHeroType = "is-success";
+        let ramHeroType = "is-success";
+        let cpuHeroType = "is-success";
+        let cpuTempHeroType = "is-success";
+        let cpuUsageHeroType = "is-success";
+        if (this.state.haveGoodData) {
+            computers = computers.concat(Object.keys(this.state.computerData));
+            if (this.state.selectedComputer && this.state.selectedComputer !== "Select a computer...") {
+                let cd = this.state.computerData[this.state.selectedComputer];
+                let memUsage = (cd["used_memory"] / cd["current_memory"] * 100).toFixed(1);
+                if (memUsage >= 70 && memUsage < 90) {
+                   ramHeroType = "is-warning";
+                } else if (memUsage >= 90) {
+                    ramHeroType = "is-danger";
+                }
+                if (cd["cpu_usage"] >= 90 || cd["cpu_pack_temp"] >= 82) {
+                    cpuHeroType = "is-danger";
+                } else if (cd["cpu_usage"] >= 70 || cd["cpu_pack_temp"] >= 70) {
+                    cpuHeroType = "is-warning";
+                }
+                if (cd["cpu_pack_temp"] >= 82) {
+                    cpuTempHeroType = "is-danger";
+                } else if (cd["cpu_pack_temp"] >= 70) {
+                    cpuTempHeroType = "is-warning";
+                }
+                if (cd["cpu_usage"] >= 90) {
+                    cpuUsageHeroType = "is-danger";
+                } else if (cd["cpu_usage"] >= 70) {
+                    cpuUsageHeroType = "is-warning";
+                }   
+                pcInfo = this.state.selectedComputer;
+                showStatuses = true;
+                cpuTemps = cd["cpu_temps"].split(",").join("°C, ") + "°C";
+                cpuUsages = cd["cpu_usages"].split(",").join("%, ") + "%";
+                ramInfo = `Memory: ${cd["used_memory"]} GB/${cd["current_memory"]} GB (${memUsage}% usage)`;
+                cpuInfo = `CPU Stats: ${cd["cpu_usage"]}% Usage at ${cd["cpu_pack_temp"]}°C`;
+                turboInfo = `Turbo: ${cd["current_turbo"]} GHz/${cd["max_turbo"]} GHz`;
+                cpuTemps = `Individual CPU Temperatures: ${cpuTemps}`;
+                cpuUsages = `Individual CPU Usages: ${cpuUsages}`;
+                let timeDiff = Math.floor(Date.now() / 1000) - cd["time"];
+                if (timeDiff <= 9) {
+                    pcHeroType = "is-success";
+                } else {
+                    pcInfo = `${this.state.selectedComputer} (No response for ${timeDiff} seconds!):`;
+                    if (timeDiff <= 59) {
+                        pcHeroType = "is-warning";
+                    } else {
+                        pcHeroType = "is-danger";
+                    }
+                }
+            }
+        }
+        return (
+            <div>
+                <h1 style={{color: textColor}} className="title is-1">Computer Status Information</h1>
+                <br/>
+                <div className="columns">
+                    <div className="column is-one-quarter">
+                        <InputField value={this.state.ip} bgColor={backgroundColor} textColor={textColor} handleChange={this.getIP} inputText="IP Address: " type="text"/>
+                        <InputField value={this.state.username} bgColor={backgroundColor} textColor={textColor} handleChange={this.getUsername} inputText="Username: " type="text"/>
+                        <InputField value={this.state.password} bgColor={backgroundColor} textColor={textColor} handleChange={this.getPassword} inputText="Password: " type="password"/>
+                        <br/>
+                        <br/>
+                        <Button textColor={buttonTextColor} handleClick={this.handleCookieChange} value="Save Information in Cookies" buttonType={this.state.useCookies ? "is-success" : "is-danger"}/>
+                        <br/>
+                        <br/>
+                        <Button textColor={buttonTextColor} handleClick={this.toggleDarkMode} value="Toggle Dark Mode" buttonType="is-info"/>
+                        <br/>
+                        <br/>
+                        <Dropdown handleChange={this.setComputer} items={computers} textColor={textColor} bgColor={backgroundColor}/>
+                        <br/>
+                        <br/>
+                        <SmallHero isVisible={true} textColor={buttonTextColor} heroType={this.state.statusHeroType} text={this.state.statusInfo}/>
+                    </div>
+
+                    <div className="column">
+                        <SmallHero isVisible={showStatuses} textColor={buttonTextColor} heroType={pcHeroType} text={pcInfo}/>
+                        <SmallHero isVisible={showStatuses} textColor={buttonTextColor} heroType={ramHeroType} text={ramInfo}/>
+                        <SmallHero isVisible={showStatuses} textColor={buttonTextColor} heroType={cpuHeroType} text={cpuInfo}/>
+                        <SmallHero isVisible={showStatuses} textColor={buttonTextColor} heroType="is-success" text={turboInfo}/>
+                        <SmallHero isVisible={showStatuses} textColor={buttonTextColor} heroType={cpuTempHeroType} text={cpuTemps}/>
+                        <SmallHero isVisible={showStatuses} textColor={buttonTextColor} heroType={cpuUsageHeroType} text={cpuUsages}/>
+                    </div>
+                </div>
+            </div>
+            
+        );
+    }
+}
+
+ReactDOM.render(<ComputerInfo/>, document.getElementById('root'));
