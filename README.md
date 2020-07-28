@@ -11,6 +11,7 @@ Although this program does use bcrypt to store passwords, and communication is d
 
 * Python 3.6 or later
 * Pip to install the requirements.txt
+* A working ability to build React projects (central-server computer only)
 
 ## Folders
 

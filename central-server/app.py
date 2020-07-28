@@ -18,13 +18,21 @@
     along with this program.  If not, see <https://www.gnu.org/licenses/>.
 """
 
-from flask import Flask, jsonify, request, render_template
+from flask import Flask, jsonify, request, send_from_directory
 import time
 import auth
 import json
+import os
+import sys
+
 
 with open("db.json") as f:  # Error handling for this is done in "auth"
     config = json.load(f)
+
+react_dir = os.path.abspath(os.path.dirname(os.path.realpath(__file__)) + "/../client/react-ui/build/")
+if not os.path.isdir(react_dir):
+    print("React client not built! Please run \"npm run build\" inside of client/react-ui/ !")
+    sys.exit(1)
 
 app = Flask(__name__)
 
@@ -40,6 +48,18 @@ try:
     domain = config["domain"]
 except KeyError:
     domain = None
+
+@app.route('/')
+def index():
+    return send_from_directory(react_dir, "index.html")
+
+@app.route("/static/js/<path:filename>")
+def js_files(filename):
+    return send_from_directory(react_dir + "/static/js/", filename)
+
+@app.route("/<path:filename>")
+def root_files(filename):
+    return send_from_directory(react_dir, filename)
 
 @app.errorhandler(404)
 def no_page(e):
@@ -80,16 +100,11 @@ def auth_request():
 
 @app.after_request
 def after_request(response):
-  response.headers.add('Access-Control-Allow-Headers', 'Content-Type,Authorization')
-  response.headers.add('Access-Control-Allow-Methods', 'GET,PUT,POST,DELETE,OPTIONS')
-  response.headers.add('Access-Control-Allow-Credentials', 'true')
-  response.headers.add('Access-Control-Allow-Origin', '*')
-  return response
-
-
-@app.route("/", methods=["GET"])
-def index():
-    return render_template("index.html")
+    response.headers.add('Access-Control-Allow-Headers', 'Content-Type,Authorization')
+    response.headers.add('Access-Control-Allow-Methods', 'GET,PUT,POST,DELETE,OPTIONS')
+    response.headers.add('Access-Control-Allow-Credentials', 'true')
+    response.headers.add('Access-Control-Allow-Origin', '*')
+    return response
 
 
 @app.route("/give_data", methods=["POST"])
