@@ -108,8 +108,9 @@ class ComputerInfo extends React.Component {
         let ip = readCookie("ipAddress") ? readCookie("ipAddress") : "";
         let username = readCookie("username") ? readCookie("username") : "";
         let token = readCookie("token") ? readCookie("token") : "";
+        let permaToken = readCookie("permaToken") ? readCookie("permaToken") : "";
         this.state = {ip: ip, username: username, password: "", isDark: isDark, useCookies: useCookiesFromCookie, token: token,
-        computerData: {}, haveGoodData: false, selectedComputer: null, statusInfo: "Waiting for next cycle...",
+        permaToken: permaToken, computerData: {}, haveGoodData: false, selectedComputer: null, statusInfo: "Waiting for next cycle...",
         statusHeroType: "is-info"};
 
         this.getIP = this.getIP.bind(this);
@@ -152,14 +153,20 @@ class ComputerInfo extends React.Component {
     }
 
     confirmAuth(returned, url, data, endFunction) {
-        if (returned["message"] === "Generated token!") {
+        if (returned["message"] === "Generated perma-token!") {
+            this.setState({permaToken: returned["token"]});
+            if (this.state.useCookies) {
+                setCookie("permaToken", this.state.permaToken, 1000*60*60*24*36500);
+                setCookie("ipAddress", this.state.ip, 1000*60*60*24*36500);
+                setCookie("username", this.state.username, 1000*60*60*24*36500);
+            }
+            this.postWithAuth(url, data, endFunction);
+        } else if (returned["message"] === "Generated temporary-token!") {
             this.setState({token: returned["token"]});
             if (this.state.useCookies) {
                 setCookie("token", this.state.token);
-                setCookie("ipAddress", this.state.ip, 1000*60*60*24*30);
-                setCookie("username", this.state.username, 1000*60*60*24*30);
             }
-            this.postWithAuth(url, data, endFunction);
+            this.postWithAuth(url, data, endFunction)
         } else if (returned["message"] === "Data successfully received!") {
             this.setState({haveGoodData: true, statusHeroType: "is-success", statusInfo: returned["message"]});
             endFunction(returned)
@@ -181,14 +188,19 @@ class ComputerInfo extends React.Component {
     }
     
     postWithAuth(url, data, endFunction) {
-        if (this.state.token === null) {
+        if (!this.state.permaToken) {
             let authData = {"user": this.state.username, "password": this.state.password, "auth": "password"};
+            this.httpPost(url, authData).then(
+                value => {this.confirmAuth(value, url, data, endFunction)}
+            );
+        } else if (this.state.token === null) {
+            let authData = {"user": this.state.username, "token": this.state.permaToken, "auth": "perma_token"};
             this.httpPost(url, authData).then(
                 value => {this.confirmAuth(value, url, data, endFunction)}
             );
         }
         else {
-            let authData = {"token": this.state.token, "auth": "token"};
+            let authData = {"token": this.state.token, "auth": "temp_token"};
             this.httpPost(url, Object.assign({}, authData, data)).then(
                 value => {this.confirmAuth(value, url, data, endFunction)}
             );

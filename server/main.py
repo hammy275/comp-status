@@ -31,6 +31,7 @@ verify_requests = False
 
 settings = {}
 should_exit = False
+perma_token = None
 token = None
 
 if not verify_requests:
@@ -50,16 +51,27 @@ def post_with_auth(url, inp_data={}):
         dict: The data returned from the POST request
 
     """
+    global perma_token
     global token
-    if token is None:
-        auth_data = {"user": settings["user"], "password": settings["password"], "auth": "password"}
+    if perma_token is None:
+        auth_data = {"user": settings["user"], "password": getpass.getpass("Please enter your password: "), "auth": "password"}
         r = requests.post(url, json=auth_data, verify=verify_requests)
         data = json.loads(r.text)
         if data["message"] == "Unauthorized!":
             return {"message": "Unauthorized!", "error": -1}
-        elif data["message"] == "Generated token!":
+        elif data["message"] == "Generated perma-token!":
+            perma_token = data["token"]
+            settings["token"] = perma_token
+            write_db()
+    if token is None:
+        auth_data = {"user": settings["user"], "token": perma_token, "auth": "perma_token"}
+        r = requests.post(url, json=auth_data, verify=verify_requests)
+        data = json.loads(r.text)
+        if data["message"] == "Unauthorized!":
+            return {"message": "Unauthorized!", "error": -1}
+        elif data["message"] == "Generated temporary-token!":
             token = data["token"]
-    inp_data.update({"token": token, "auth": "token"})
+    inp_data.update({"token": token, "auth": "temp_token"})
     r = requests.post(url, json=inp_data, verify=verify_requests)
     data = json.loads(r.text)
     if data["message"] == "Unauthorized!":
@@ -98,19 +110,19 @@ def ping(ip):
 def startup():
     """Startup."""
     global settings
+    global perma_token
     try:
         with open("settings.json") as f:
             settings = json.load(f)
-    except (json.decoder.JSONDecodeError, FileNotFoundError):
+            perma_token = settings["token"]
+    except (json.decoder.JSONDecodeError, FileNotFoundError, KeyError):
         print("Welcome to comp-status! By using this program, you agree to the following license: ")
         print(license)
         print("If you don't agree with the license above, please exit now.")
         while True:
             ip = input("Enter IP address of central server (including port)! ")
             user = input("Enter Username: ")
-            password = getpass.getpass("Enter Password: ")
             settings["user"] = user
-            settings["password"] = password
             if ping(ip):
                 settings["ip"] = ip
                 write_db()

@@ -78,15 +78,15 @@ def auth_request():
         JSON: JSON data to return to client, whether it be requested data or alerting of lack of authorization.
 
     """
-    if request.method == "GET":
+    if request.method != "POST":
         return
-    elif request.method != "POST":
-        return {"message": "Server exists!"}
     data = request.get_json()
     try:
         if data["auth"] == "password":
-            return auth.get_token(data["user"].lower(), data["password"])
-        elif data["auth"] == "token":
+            return auth.get_perma_token(data["user"].lower(), data["password"])
+        elif data["auth"] == "perma_token":
+            return auth.get_temp_token(data["user"].lower(), data["token"])
+        elif data["auth"] == "temp_token":
             r_data = auth.auth_token(data["token"])
             if r_data != {"message": "Authorized"}:
                 return jsonify(r_data), 401

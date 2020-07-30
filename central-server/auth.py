@@ -25,7 +25,8 @@ import bcrypt
 
 try:
     with open("db.json") as f:
-        users = json.load(f)["users"]
+        db = json.load(f)
+        users = db["users"]
 except (json.decoder.JSONDecodeError, FileNotFoundError):
     print("db.json does not exist! Please run server_manager.py (and configure a user if one has not already been)!")
     sys.exit(1)
@@ -33,6 +34,13 @@ except (json.decoder.JSONDecodeError, FileNotFoundError):
 expire_time = 60*60*24  # Time in seconds until a token expires
 
 tokens = {}
+
+
+def write_db():
+    """Write DB to File."""
+    with open("db.json", "w") as dbf:
+        json.dump(db, dbf)
+    print("Database successfully written!")
 
 
 def check_permission(token, permission):
@@ -83,7 +91,7 @@ def delete_token(token):
 def auth_token(token):
     """Check Token.
 
-    Check whether the provided token is valid for use.
+    Check whether the provided temporary token is valid for use.
 
     Args:
         token (str): Token to check if valid.
@@ -101,10 +109,10 @@ def auth_token(token):
         return {"message": "Unauthorized!"} 
 
 
-def get_token(user, password):
-    """Get Token for User.
+def get_perma_token(user, password):
+    """Get Permanent Token for User.
 
-    Generates a token for a user if their username and password are valid.
+    Generates a permanent token for a user if their username and password are valid.
 
     Args:
         user (str): Client supplied username
@@ -117,10 +125,35 @@ def get_token(user, password):
     time.sleep(1)
     try:
         if bcrypt.checkpw(password.encode('utf-8'), users[user]["password"].encode("utf-8")):
-            token = gen_token()
-            tokens[token] = {"time": time.time(), "user": user, "permissions": users[user]["permissions"]}
-            return {"message": "Generated token!", "token": token}
+            perma_token = gen_token()
+            try:
+                users[user]["tokens"].append(perma_token)
+            except KeyError:
+                users[user]["tokens"] = [perma_token]
+            write_db()
+            return {"message": "Generated perma-token!", "token": perma_token}
         else:
             return {"message": "Unauthorized!"} 
+    except KeyError:
+        return {"message": "Unauthorized!"}
+
+
+def get_temp_token(user, perma_token):
+    """Get Temporary Token for User.
+
+    Args:
+        user (str): Username of user to generate token for
+        perma_token (str): A valid perma-token
+
+    Returns:
+        dict: A generated token or unauthorized
+
+    """
+    time.sleep(0.5)
+    try:
+        if perma_token in users[user]["tokens"]:
+            token = gen_token()
+            tokens[token] = {"time": time.time(), "user": user, "permissions": users[user]["permissions"]}
+            return {"message": "Generated temporary-token!", "token": token}
     except KeyError:
         return {"message": "Unauthorized!"}
