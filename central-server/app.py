@@ -78,7 +78,9 @@ def auth_request():
         JSON: JSON data to return to client, whether it be requested data or alerting of lack of authorization.
 
     """
-    if request.method == "OPTIONS":
+    if request.method == "GET":
+        return
+    elif request.method == "OPTIONS":
         return jsonify({"message": "OPTIONS requests are ignored by this server!"}), 200
     data = request.get_json()
     try:
