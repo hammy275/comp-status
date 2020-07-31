@@ -100,6 +100,31 @@ class SmallHero extends React.Component {
     }
 }
 
+
+class TokenManager extends React.Component {
+    render() {
+        if (!this.props.showTokenManager) {
+            return null;
+        } else if (!this.props.canShow) {
+            return (
+                <SmallHero isVisible="true" heroType="is-danger" textColor={this.props.textColor} text="Your user account does not have the 'revoke_tokens' permission!"/>
+            )
+        }
+        return (
+            <div>
+                <Button textColor={this.props.buttonTextColor} handleClick={this.props.refreshTokens} value="Refresh List of Tokens" buttonType="is-success"/>
+                <br/>
+                <Dropdown handleChange={this.props.tempTokenHandle} items={this.props.tempTokens} textColor={this.props.textColor} bgColor={this.props.bgColor}/>
+                <Button textColor={this.props.buttonTextColor} handleClick={this.props.deleteTempToken} value="Delete Selected Temporary Token" buttonType="is-danger"/>
+                <br/>
+                <Dropdown handleChange={this.props.permaTokenHandle} items={this.props.permaTokens} textColor={this.props.textColor} bgColor={this.props.bgColor}/>
+                <Button textColor={this.props.buttonTextColor} handleClick={this.props.deletePermaToken} value="Delete Selected Permanent Token" buttonType="is-danger"/>
+            </div>
+        )
+    }
+}
+
+
 class ComputerInfo extends React.Component {
     constructor(props) {
         super(props);
@@ -111,7 +136,8 @@ class ComputerInfo extends React.Component {
         let permaToken = readCookie("permaToken") ? readCookie("permaToken") : "";
         this.state = {ip: ip, username: username, password: "", isDark: isDark, useCookies: useCookiesFromCookie, token: token,
         permaToken: permaToken, computerData: {}, haveGoodData: false, selectedComputer: null, statusInfo: "Waiting for next cycle...",
-        statusHeroType: "is-info"};
+        statusHeroType: "is-info", showTokenManager: false, selectedPermaToken: null, selectedTempToken: null, permissions: [],
+        tempTokens: [], permaTokens: []};
 
         this.getIP = this.getIP.bind(this);
         this.getUsername = this.getUsername.bind(this);
@@ -122,10 +148,17 @@ class ComputerInfo extends React.Component {
         this.postWithAuth = this.postWithAuth.bind(this);
         this.endGetComputerData = this.endGetComputerData.bind(this);
         this.setComputer = this.setComputer.bind(this);
+        this.tempTokenHandle = this.tempTokenHandle.bind(this);
+        this.permaTokenHandle = this.permaTokenHandle.bind(this);
+        this.handleTokenRequest = this.handleTokenRequest.bind(this);
+        this.refreshTokens = this.refreshTokens.bind(this);
+        this.deletePermaToken = this.deletePermaToken.bind(this);
+        this.deleteTempToken = this.deleteTempToken.bind(this);
+        this.afterTokenDelete = this.afterTokenDelete.bind(this);
     }
 
     componentDidMount() {
-        setInterval(() => this.postWithAuth("https://" + this.state.ip + "/give_data", {}, this.endGetComputerData), 1000);
+        setInterval(() => this.postWithAuth("https://" + this.state.ip + "/give_data", {}, this.endGetComputerData), 5000);
     }
 
     // BEGIN BACKEND LOGIC
@@ -162,14 +195,15 @@ class ComputerInfo extends React.Component {
             }
             this.postWithAuth(url, data, endFunction);
         } else if (returned["message"] === "Generated temporary-token!") {
-            this.setState({token: returned["token"]});
+            this.setState({token: returned["token"], permissions: returned["permissions"]});
             if (this.state.useCookies) {
                 setCookie("token", this.state.token);
+                setCookie("canToken", this.state.permissions.includes("revoke_tokens").toString());
             }
             this.postWithAuth(url, data, endFunction)
         } else if (returned["message"] === "Data successfully received!") {
             this.setState({haveGoodData: true, statusHeroType: "is-success", statusInfo: returned["message"]});
-            endFunction(returned)
+            endFunction(returned);
         } else if (returned["message"] === "Unauthorized!") {
             this.setState({token: null, haveGoodData: false});
             delCookie("token");
@@ -184,6 +218,8 @@ class ComputerInfo extends React.Component {
             this.setState({token: null});
             delCookie("token");
             this.postWithAuth(url, data, endFunction);
+        } else if (returned["message"] && returned["error"] === 200) {
+            endFunction(returned);
         }
     }
     
@@ -241,6 +277,7 @@ class ComputerInfo extends React.Component {
             delCookie("ipAddress");
             delCookie("username");
             delCookie("token");
+            delCookie("permaToken");
         }
     }
 
@@ -253,6 +290,46 @@ class ComputerInfo extends React.Component {
 
     setComputer(event) {
         this.setState({selectedComputer: event.target.value});
+    }
+
+    tempTokenHandle(event) {
+        if (event.target.value !== "Select a temporary token...") {
+            this.setState({selectedTempToken: event.target.value});
+        }
+    }
+
+    permaTokenHandle(event) {
+        if (event.target.value !== "Selecte a permanent token...") {
+            this.setState({selectedPermaToken: event.target.value});
+        }
+    }
+
+    handleTokenRequest(returned) {
+        let permaTokensList = [];
+        for (const [key, value] of Object.entries(returned["perma_tokens"])) {
+            permaTokensList = permaTokensList.concat(value);
+        }
+        this.setState({permaTokens: permaTokensList, tempTokens: Object.keys(returned["temp_tokens"])});
+    }
+
+    refreshTokens() {
+        this.postWithAuth("https://" + this.state.ip + "/get_tokens", {}, this.handleTokenRequest);
+    }
+
+    afterTokenDelete(returned) {
+        let heroType = "is-success";
+        if (returned["message"] !== "Token deleted successfully!") {
+            heroType = "is-danger";
+        }
+        this.setState({statusInfo: returned["message"], statusHeroType: heroType});
+    }
+
+    deleteTempToken() {
+        this.postWithAuth("https://" + this.state.ip + "/delete_token", {"type": "temp", "token_to_delete": this.state.selectedTempToken}, this.afterTokenDelete);
+    }
+
+    deletePermaToken() {
+        this.postWithAuth("https://" + this.state.ip + "/delete_token", {"type": "perma", "token_to_delete": this.state.selectedPermaToken}, this.afterTokenDelete);
     }
 
     render() {
@@ -287,6 +364,9 @@ class ComputerInfo extends React.Component {
         let cpuHeroType = "is-success";
         let cpuTempHeroType = "is-success";
         let cpuUsageHeroType = "is-success";
+        let canToken = this.state.permissions.includes("revoke_tokens") || readCookie("canToken", "false") === "true";
+        let tempTokens = ["Select a temporary token..."];
+        let permaTokens = ["Select a permanent token..."];
         if (this.state.haveGoodData) {
             computers = computers.concat(Object.keys(this.state.computerData));
             if (this.state.selectedComputer && this.state.selectedComputer !== "Select a computer...") {
@@ -333,6 +413,11 @@ class ComputerInfo extends React.Component {
                     }
                 }
             }
+            if (canToken) {
+                tempTokens = tempTokens.concat(this.state.tempTokens);
+                permaTokens = permaTokens.concat(this.state.permaTokens);
+            }
+
         }
         return (
             <div>
@@ -364,6 +449,14 @@ class ComputerInfo extends React.Component {
                         <SmallHero isVisible={showStatuses} textColor={buttonTextColor} heroType="is-success" text={turboInfo}/>
                         <SmallHero isVisible={showStatuses} textColor={buttonTextColor} heroType={cpuTempHeroType} text={cpuTemps}/>
                         <SmallHero isVisible={showStatuses} textColor={buttonTextColor} heroType={cpuUsageHeroType} text={cpuUsages}/>
+                    </div>
+                </div>
+                <div className="columns">
+                    <div className="column is-one-third">
+                        <Button textColor={buttonTextColor} handleClick={() => this.setState({showTokenManager: !this.state.showTokenManager})} value="Show Token Manager" buttonType="is-info"/>
+                        <br/>
+                        <br/>
+                        <TokenManager deleteTempToken={this.deleteTempToken} deletePermaToken={this.deletePermaToken} buttonTextColor={buttonTextColor} refreshTokens={this.refreshTokens} canShow={canToken} showTokenManager={this.state.showTokenManager} tempTokenHandle={this.tempTokenHandle} permaTokenHandle={this.permaTokenHandle} tempTokens={tempTokens} permaTokens={permaTokens} textColor={textColor} bgColor={backgroundColor}/>
                     </div>
                 </div>
             </div>

@@ -78,8 +78,8 @@ def auth_request():
         JSON: JSON data to return to client, whether it be requested data or alerting of lack of authorization.
 
     """
-    if request.method != "POST":
-        return
+    if request.method == "OPTIONS":
+        return jsonify({"message": "OPTIONS requests are ignored by this server!"}), 200
     data = request.get_json()
     try:
         if data["auth"] == "password":
@@ -133,7 +133,7 @@ def take_data():
 def get_tokens():
     data = request.get_json()
     if auth.check_permission(data["token"], "revoke_tokens"):
-        return jsonify({"tokens": auth.get_tokens(), "message": "Tokens successfully retrieved!"})
+        return jsonify({"temp_tokens": auth.get_temp_tokens(), "message": "Tokens successfully retrieved!", "perma_tokens": auth.get_perma_tokens()})
     else:
         return jsonify({"message": "No permission!"}), 401
     
@@ -143,9 +143,14 @@ def delete_token():
     data = request.get_json()
     if auth.check_permission(data["token"], "revoke_tokens"):
         try:
-            return jsonify(auth.delete_token(data["token_to_delete"]))
+            if data["type"] == "perma":
+                return jsonify(auth.delete_perma_token(data["token_to_delete"]))
+            elif data["type"] == "temp":
+                return jsonify(auth.delete_temp_token(data["token_to_delete"]))
+            else:
+                return jsonify({"message": "Token type to delete not specified!"}), 422
         except KeyError:
-            return jsonify({"message": "Token to delete not specified!"})
+            return jsonify({"message": "Token to delete not specified!"}), 422
     else:
         return jsonify({"message": "No permission!"}), 401
 

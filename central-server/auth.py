@@ -61,8 +61,8 @@ def gen_token():
     return token_urlsafe(64)
 
 
-def get_tokens():
-    """Get Token Dict.
+def get_temp_tokens():
+    """Get Temp Tokens Dict.
 
     Returns:
         dict: The tokens dictionary.
@@ -71,7 +71,37 @@ def get_tokens():
     return tokens
 
 
-def delete_token(token):
+def get_perma_tokens():
+    """Get Perma Tokens of Users.
+
+    Returns:
+        dict: The perma-tokens dictionary.
+
+    """
+    to_return = {}
+    for user in users.keys():
+        try:
+            to_return[user] = users[user]["tokens"]
+        except KeyError:
+            pass
+    return to_return
+
+
+def delete_perma_token(token):
+    try:
+        for user in users.keys():
+            if token in users[user]["tokens"]:
+                new_tokens = users[user]["tokens"]
+                new_tokens.remove(token)
+                users[user]["tokens"] = new_tokens
+                write_db()
+                return {"message": "Token deleted successfully!"}
+        return {"message": "Specified token not found!"}
+    except (ValueError, KeyError):
+        return {"message": "Specified token not found!"}
+
+
+def delete_temp_token(token):
     """Delete Token.
 
     Args:
@@ -154,6 +184,6 @@ def get_temp_token(user, perma_token):
         if perma_token in users[user]["tokens"]:
             token = gen_token()
             tokens[token] = {"time": time.time(), "user": user, "permissions": users[user]["permissions"]}
-            return {"message": "Generated temporary-token!", "token": token}
+            return {"message": "Generated temporary-token!", "token": token, "permissions": users[user]["permissions"]}
     except KeyError:
         return {"message": "Unauthorized!"}
