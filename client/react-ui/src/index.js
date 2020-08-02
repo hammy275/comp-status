@@ -206,7 +206,6 @@ class ComputerInfo extends React.Component {
     }
 
     confirmAuth(returned, url, data, endFunction) {
-        console.log(this.state);
         if (returned["message"] === "Generated perma-token!") {
             this.setState({permaToken: returned["token"]});
             if (this.state.useCookies) {
