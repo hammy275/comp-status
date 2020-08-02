@@ -135,7 +135,7 @@ class ComputerInfo extends React.Component {
         let token = readCookie("token") ? readCookie("token") : "";
         let permaToken = readCookie("permaToken") ? readCookie("permaToken") : "";
         this.state = {ip: ip, username: username, password: "", isDark: isDark, useCookies: useCookiesFromCookie, token: token,
-        permaToken: permaToken, computerData: {}, haveGoodData: false, selectedComputer: null, statusInfo: "Waiting for next cycle...",
+        permaToken: permaToken, computerData: {}, haveGoodData: false, selectedComputer: null, statusInfo: "Waiting for data...",
         statusHeroType: "is-info", showTokenManager: false, selectedPermaToken: null, selectedTempToken: null, permissions: [],
         tempTokens: [], permaTokens: []};
 
@@ -155,6 +155,8 @@ class ComputerInfo extends React.Component {
         this.deletePermaToken = this.deletePermaToken.bind(this);
         this.deleteTempToken = this.deleteTempToken.bind(this);
         this.afterTokenDelete = this.afterTokenDelete.bind(this);
+
+        this.postWithAuth("https://" + this.state.ip + "/give_data", {}, this.endGetComputerData);
     }
 
     componentDidMount() {
@@ -229,7 +231,7 @@ class ComputerInfo extends React.Component {
             this.httpPost(url, authData).then(
                 value => {this.confirmAuth(value, url, data, endFunction)}
             );
-        } else if (this.state.token === null) {
+        } else if (!this.state.token) {
             let authData = {"user": this.state.username, "token": this.state.permaToken, "auth": "perma_token"};
             this.httpPost(url, authData).then(
                 value => {this.confirmAuth(value, url, data, endFunction)}
@@ -306,6 +308,7 @@ class ComputerInfo extends React.Component {
 
     handleTokenRequest(returned) {
         let permaTokensList = [];
+        // eslint-disable-next-line
         for (const [key, value] of Object.entries(returned["perma_tokens"])) {
             permaTokensList = permaTokensList.concat(value);
         }
