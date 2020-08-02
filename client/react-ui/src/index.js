@@ -1,6 +1,24 @@
 import React from 'react'
 import ReactDOM from 'react-dom'
 
+function removeFromArray(array, item) {
+    for (let i = 0; i < array.length; i++) {
+        if (array[i] === item) {
+            array.splice(i, 1);
+        }
+    }
+    return array;
+}
+
+function removeFromArrayPartialMatch(array, item) {
+    for (let i = 0; i < array.length; i++) {
+        if (array[i].includes(item)) {
+            array.splice(i, 1);
+        }
+    }
+    return array;
+}
+
 function setCookie(name, value, expires, bypassNoCookie) {
     let d = new Date();
     if (expires) {
@@ -188,6 +206,7 @@ class ComputerInfo extends React.Component {
     }
 
     confirmAuth(returned, url, data, endFunction) {
+        console.log(this.state);
         if (returned["message"] === "Generated perma-token!") {
             this.setState({permaToken: returned["token"]});
             if (this.state.useCookies) {
@@ -206,14 +225,13 @@ class ComputerInfo extends React.Component {
         } else if (returned["message"] === "Data successfully received!") {
             this.setState({haveGoodData: true, statusHeroType: "is-success", statusInfo: returned["message"]});
             endFunction(returned);
-        } else if (returned["message"] === "Unauthorized!") {
+        } else if (returned["message"].includes("Unauthorized")) {
             this.setState({token: null, haveGoodData: false});
             delCookie("token");
             this.setState({haveGoodData: false, statusHeroType: "is-danger",
-            statusInfo: "Invalid username/password!"
-        });
+            statusInfo: "Invalid username/password!"});
         } else if (returned["error"] !== 200) {
-            this.setState({haveGoodData: false, statusHeroType: "is-danger",
+            this.setState({haveGoodData: false, statusHeroType: "is-danger", token: null,
             statusInfo: "Error while contacting provided address! Maybe the server is down, or your browser doesn't trust the cert!"
         });
         } else if (returned["message"] === "Token expired!") {
@@ -302,7 +320,7 @@ class ComputerInfo extends React.Component {
 
     permaTokenHandle(event) {
         if (event.target.value !== "Selecte a permanent token...") {
-            this.setState({selectedPermaToken: event.target.value});
+            this.setState({selectedPermaToken: event.target.value.substr(event.target.value.indexOf(":") + 2)});
         }
     }
 
@@ -310,7 +328,9 @@ class ComputerInfo extends React.Component {
         let permaTokensList = [];
         // eslint-disable-next-line
         for (const [key, value] of Object.entries(returned["perma_tokens"])) {
-            permaTokensList = permaTokensList.concat(value);
+            for (let i = 0; i < value.length; i++) {
+                permaTokensList = permaTokensList.concat(key + ": " + value[i]);
+            }
         }
         this.setState({permaTokens: permaTokensList, tempTokens: Object.keys(returned["temp_tokens"])});
     }
@@ -321,8 +341,14 @@ class ComputerInfo extends React.Component {
 
     afterTokenDelete(returned) {
         let heroType = "is-success";
-        if (returned["message"] !== "Token deleted successfully!") {
+        if (returned["message"] !== "Perma-token deleted successfully!" && returned["message"] !== "Temp-token deleted successfully!") {
             heroType = "is-danger";
+        } else {
+            if (returned["message"] === "Perma-token deleted successfully!") {
+                this.setState({permaTokens: removeFromArrayPartialMatch(this.state.permaTokens, this.state.selectedPermaToken)});
+            } else {
+                this.setState({tempTokens: removeFromArray(this.state.tempTokens, this.state.selectedTempToken)});
+            }
         }
         this.setState({statusInfo: returned["message"], statusHeroType: heroType});
     }

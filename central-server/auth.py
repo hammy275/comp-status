@@ -47,7 +47,7 @@ def check_permission(token, permission):
     try:
         user = tokens[token]["user"]
         return permission in users[user]["permissions"]
-    except:
+    except Exception:
         return False
 
 
@@ -88,6 +88,15 @@ def get_perma_tokens():
 
 
 def delete_perma_token(token):
+    """Delete Perma-Token.
+
+    Args:
+        token (str): Token to delete
+
+    Returns:
+        dict: A dict reflecting the status of the deletion.
+
+    """
     try:
         for user in users.keys():
             if token in users[user]["tokens"]:
@@ -95,7 +104,7 @@ def delete_perma_token(token):
                 new_tokens.remove(token)
                 users[user]["tokens"] = new_tokens
                 write_db()
-                return {"message": "Token deleted successfully!"}
+                return {"message": "Perma-token deleted successfully!"}
         return {"message": "Specified token not found!"}
     except (ValueError, KeyError):
         return {"message": "Specified token not found!"}
@@ -113,7 +122,7 @@ def delete_temp_token(token):
     """
     try:
         del tokens[token]
-        return {"message": "Token deleted successfully!"}
+        return {"message": "Temp-token deleted successfully!"}
     except KeyError:
         return {"message": "Token does not exist!"}
 
@@ -185,5 +194,7 @@ def get_temp_token(user, perma_token):
             token = gen_token()
             tokens[token] = {"time": time.time(), "user": user, "permissions": users[user]["permissions"]}
             return {"message": "Generated temporary-token!", "token": token, "permissions": users[user]["permissions"]}
+        else:
+            return {"message": "Unauthorized!"}
     except KeyError:
         return {"message": "Unauthorized!"}
