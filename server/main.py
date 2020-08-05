@@ -19,7 +19,6 @@ license = """
 """
 
 import requests
-from time import sleep
 import json
 import signal
 import getpass
@@ -147,8 +146,8 @@ def main_loop():
         current_memory = round(psutil.virtual_memory()[0] / 1000000000, 2)
         used_memory = round(current_memory - (psutil.virtual_memory()[1] / 1000000000), 2)
 
-        cpu_usages_floats = psutil.cpu_percent(interval=1, percpu=True)
-        cpu_usage = psutil.cpu_percent(interval=1)
+        cpu_usages_floats = psutil.cpu_percent(interval=2, percpu=True)
+        cpu_usage = psutil.cpu_percent(interval=2)
         cpu_usages = []
         cpus = len(cpu_usages_floats)
         for c in cpu_usages_floats:
