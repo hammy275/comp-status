@@ -155,7 +155,7 @@ class ComputerInfo extends React.Component {
         this.state = {ip: ip, username: username, password: "", isDark: isDark, useCookies: useCookiesFromCookie, token: token,
         permaToken: permaToken, computerData: {}, haveGoodData: false, selectedComputer: null, statusInfo: "Waiting for data...",
         statusHeroType: "is-info", showTokenManager: false, selectedPermaToken: null, selectedTempToken: null, permissions: [],
-        tempTokens: [], permaTokens: []};
+        tempTokens: [], permaTokens: [], failCount: 0};
 
         this.getIP = this.getIP.bind(this);
         this.getUsername = this.getUsername.bind(this);
@@ -222,13 +222,17 @@ class ComputerInfo extends React.Component {
             }
             this.postWithAuth(url, data, endFunction)
         } else if (returned["message"] === "Data successfully received!") {
-            this.setState({haveGoodData: true, statusHeroType: "is-success", statusInfo: returned["message"]});
+            this.setState({haveGoodData: true, statusHeroType: "is-success", statusInfo: returned["message"], failCount: 0});
             endFunction(returned);
         } else if (returned["message"].includes("Unauthorized")) {
             this.setState({token: null, haveGoodData: false});
+            this.setState((state, props) => ({failCount: state.failCount + 1}));
             delCookie("token");
             this.setState({haveGoodData: false, statusHeroType: "is-danger",
             statusInfo: "Invalid username/password!"});
+            if (this.state.failCount >= 3) {
+                this.setState({permaToken: null, failCount: 0});
+            }
         } else if (returned["error"] !== 200) {
             this.setState({haveGoodData: false, statusHeroType: "is-danger", token: null,
             statusInfo: "Error while contacting provided address! Maybe the server is down, or your browser doesn't trust the cert!"

@@ -166,8 +166,8 @@ def get_perma_token(user, password):
     try:
         if bcrypt.checkpw(password.encode('utf-8'), users[user]["password"].encode("utf-8")):
             try:
-                return users[user]["tokens"][0]
-            except IndexError:
+                return {"message": "Generated perma-token!", "token": users[user]["tokens"][0]}
+            except (IndexError, KeyError):
                 perma_token = gen_token()
                 users[user]["tokens"] = [perma_token]
                 write_db()
