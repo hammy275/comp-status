@@ -233,6 +233,10 @@ class ComputerInfo extends React.Component {
             if (this.state.failCount >= 3) {
                 this.setState({permaToken: null, failCount: 0});
             }
+        } else if (returned["message"] === "No permission!") {
+            this.setState({token: null, permaToken: null, statusInfo: "User account does not have permission to see computer data!", statusHeroType: "is-danger"});
+            delCookie("token");
+            delCookie("permaToken");
         } else if (returned["error"] !== 200) {
             this.setState({haveGoodData: false, statusHeroType: "is-danger", token: null,
             statusInfo: "Error while contacting provided address! Maybe the server is down, or your browser doesn't trust the cert!"
@@ -243,7 +247,7 @@ class ComputerInfo extends React.Component {
             this.postWithAuth(url, data, endFunction);
         } else if (returned["message"] && returned["error"] === 200) {
             endFunction(returned);
-        }
+        } 
     }
     
     postWithAuth(url, data, endFunction) {

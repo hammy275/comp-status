@@ -22,6 +22,7 @@ import requests
 import json
 import signal
 import getpass
+import sys
 
 import socket
 import psutil
@@ -52,6 +53,7 @@ def post_with_auth(url, inp_data={}):
     """
     global perma_token
     global token
+    global settings
     if perma_token is None:
         auth_data = {"user": settings["user"], "password": getpass.getpass("Please enter your password: "), "auth": "password"}
         r = requests.post(url, json=auth_data, verify=verify_requests)
@@ -79,6 +81,11 @@ def post_with_auth(url, inp_data={}):
     elif data["message"] == "Token expired!":
         token = None
         return post_with_auth(url, inp_data)
+    elif data["message"] == "No permission!":
+        del settings["token"]
+        write_db()
+        print("The specified account does not have permission to act as a computer! Please re-configure!")
+        sys.exit(1)
     else:
         data["error"] = r.status_code
         return data
@@ -103,7 +110,7 @@ def ping(ip):
 
     """
     data = post_with_auth("https://" + ip + "/ping")
-    return data["message"] == "Pong!"
+    return data["message"]
 
 
 def startup():
@@ -122,12 +129,13 @@ def startup():
             ip = input("Enter IP address of central server (including port)! ")
             user = input("Enter Username: ")
             settings["user"] = user
-            if ping(ip):
+            status = ping(ip)
+            if status == "Pong!":
                 settings["ip"] = ip
                 write_db()
                 break
             else:
-                print("Invalid IP/connection error!")
+                print(status)
 
 
 def set_exit(sig, frame):

@@ -111,7 +111,11 @@ def after_request(response):
 
 @app.route("/give_data", methods=["POST"])
 def give_data():
-    return jsonify({"message": "Data successfully received!", "data" : db})
+    data = request.get_json()
+    if auth.check_permission(data["token"], "client_user"):
+        return jsonify({"message": "Data successfully received!", "data" : db})
+    else:
+        return jsonify({"message": "No permission!"}), 401
 
 
 @app.route("/ping", methods=["POST"])
@@ -121,6 +125,9 @@ def ping():
 
 @app.route("/take_data", methods=["POST"])
 def take_data():
+    data = request.get_json()
+    if not auth.check_permission(data["token"], "computer_user"):
+        return jsonify({"message": "No permission!"}), 401
     data = request.get_json()
     del data["auth"]
     del data["token"]

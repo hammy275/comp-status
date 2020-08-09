@@ -5,7 +5,7 @@ import getpass
 import sys
 import bcrypt
 
-config_version = 3
+config_version = 4
 
 try:
     with open("db.json") as f:
@@ -52,6 +52,11 @@ def upgrade_db():
             for username in db["users"].keys():
                 new_db["users"][username.lower()] = db["users"][username]
             db = new_db
+        elif db_version == 3:
+            print("Upgrading from DB version 3 to 4")
+            for user in db["users"].keys():
+                db["users"][user]["permissions"].append("computer_user")
+                db["users"][user]["permissions"].append("client_user")
         db_version += 1
         db["version"] = db_version
         write_db()
@@ -109,6 +114,11 @@ def user_manager():
                     for perm in all_perms:
                         if get_input("Give {} the permission {}? [y/N] ".format(user, perm), ["y", "n"], "n") == "y":
                             new_user_perms.append(perm)
+                    user_type = get_input("Should the user: Send computer data, View computer data, or Both? [s/v/b]", ["s", "v", "b"])
+                    if user_type in ["s", "b"]:
+                        new_user_perms.append("computer_user")
+                    if user_type in ["v", "b"]:
+                        new_user_perms.append("client_user")
                     db["users"][user.lower()] = {"password": bcrypt.hashpw(password.encode('utf-8'), bcrypt.gensalt()).decode("utf-8"), "permissions": new_user_perms}
         elif opt == "2":
             print("\n\n")
