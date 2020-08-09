@@ -152,6 +152,7 @@ def get_perma_token(user, password):
     """Get Permanent Token for User.
 
     Generates a permanent token for a user if their username and password are valid.
+    Will return the perma-token if it's already generated.
 
     Args:
         user (str): Client supplied username
@@ -164,13 +165,13 @@ def get_perma_token(user, password):
     time.sleep(1)
     try:
         if bcrypt.checkpw(password.encode('utf-8'), users[user]["password"].encode("utf-8")):
-            perma_token = gen_token()
             try:
-                users[user]["tokens"].append(perma_token)
-            except KeyError:
+                return users[user]["tokens"][0]
+            except IndexError:
+                perma_token = gen_token()
                 users[user]["tokens"] = [perma_token]
-            write_db()
-            return {"message": "Generated perma-token!", "token": perma_token}
+                write_db()
+                return {"message": "Generated perma-token!", "token": perma_token}
         else:
             return {"message": "Unauthorized!"} 
     except KeyError:
