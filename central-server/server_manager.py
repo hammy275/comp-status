@@ -5,7 +5,7 @@ import getpass
 import sys
 import bcrypt
 
-config_version = 4
+config_version = 5
 
 try:
     with open("db.json") as f:
@@ -57,6 +57,9 @@ def upgrade_db():
             for user in db["users"].keys():
                 db["users"][user]["permissions"].append("computer_user")
                 db["users"][user]["permissions"].append("client_user")
+        elif db_version == 4:
+            print("Upgrading from DB version 4 to 5")
+            db["use_cors"] = True
         db_version += 1
         db["version"] = db_version
         write_db()
@@ -95,7 +98,7 @@ def set_permissions(user):
 def settings_manager():
     opt = ""
     while opt != "0" and opt.lower() != "e":
-        opt = get_input("1 - Change Port (currently {})\n2 - Set Domain Name\n0/e - Exit\n".format(str(get_config("port"))), ["1", "2", "0", "e"])
+        opt = get_input("1 - Change Port (currently {})\n2 - Set Domain Name\n3 - Enable/disable CORS\n0/e - Exit\n".format(str(get_config("port"))), ["1", "2", "3", "0", "e"])
         if opt == "1":
             new_port = input("Enter a new port number: ")
             try:
@@ -107,6 +110,12 @@ def settings_manager():
         elif opt == "2":
             domain_name = input("Enter a domain name to use when using \"run_server.py\": ")
             db["domain"] = domain_name
+        elif opt == "3":
+            yn = get_input("Enable/disable CORS? [e/d]: ", ['e', 'd'])
+            if yn == "e":
+                db["use_cors"] = True
+            else:
+                db["use_cors"] = False
 
 def user_manager():
     opt = ""

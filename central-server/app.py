@@ -44,6 +44,12 @@ except KeyError:
     port = 5000
 
 try:
+    use_cors = config["use_cors"]
+except KeyError:
+    print("Whether or not to use CORS not specified! Defaulting to True...")
+    use_cors = True
+
+try:
     domain = config["domain"]
 except KeyError:
     domain = None
@@ -101,10 +107,11 @@ def auth_request():
 
 @app.after_request
 def after_request(response):
-    response.headers.add('Access-Control-Allow-Headers', 'Content-Type,Authorization')
-    response.headers.add('Access-Control-Allow-Methods', 'GET,PUT,POST,DELETE,OPTIONS')
-    response.headers.add('Access-Control-Allow-Credentials', 'true')
-    response.headers.add('Access-Control-Allow-Origin', '*')
+    if use_cors:
+        response.headers.add('Access-Control-Allow-Headers', 'Content-Type,Authorization')
+        response.headers.add('Access-Control-Allow-Methods', 'GET,PUT,POST,DELETE,OPTIONS')
+        response.headers.add('Access-Control-Allow-Credentials', 'true')
+        response.headers.add('Access-Control-Allow-Origin', '*')
     return response
 
 
