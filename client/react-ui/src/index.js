@@ -26,7 +26,7 @@ function setCookie(name, value, expires, bypassNoCookie) {
     } else {
         d.setTime(d.getTime() + (1000 * 60 * 60 * 24));
     }
-    document.cookie = `${name}=${value};expires=${d.toUTCString()};path=/`;
+    document.cookie = `${name}=${value};expires=${d.toUTCString()};path=/;SameSite=Strict`;
 }
 
 function delCookie(name) {
