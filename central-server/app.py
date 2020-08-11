@@ -26,8 +26,7 @@ import os
 import sys
 
 
-with open("db.json") as f:  # Error handling for this is done in "auth"
-    config = json.load(f)
+config = auth.db
 
 react_dir = os.path.abspath(os.path.dirname(os.path.realpath(__file__)) + "/../client/react-ui/build/")
 if not os.path.isdir(react_dir):
@@ -114,6 +113,33 @@ def give_data():
     data = request.get_json()
     if auth.check_permission(data["token"], "client_user"):
         return jsonify({"message": "Data successfully received!", "data" : db})
+    else:
+        return jsonify({"message": "No permission!"}), 401
+
+
+@app.route("/list_users", methods=["POST"])
+def list_users():
+    data = request.get_json()
+    if auth.check_permission(data["token"], "manage_users"):
+        return jsonify({"message": "Users successfully retrieved", "users": config["users"]})
+    else:
+        return jsonify({"message": "No permission!"}), 401
+
+
+@app.route("/delete_user", methods=["POST"])
+def delete_user():
+    data = request.get_json()
+    if auth.check_permission(data["token"], "manage_users"):
+        return auth.delete_user(data["user_to_delete"])
+    else:
+        return jsonify({"message": "No permission!"}), 401
+
+
+@app.route("/add_user", methods=["POST"])
+def add_user():
+    data = request.get_json()
+    if auth.check_permission(data["token"], "manage_users"):
+        return auth.add_user(data["user_to_add"], data["password_of_user"], data["permissions"])
     else:
         return jsonify({"message": "No permission!"}), 401
 

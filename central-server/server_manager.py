@@ -78,6 +78,20 @@ def get_input(question, options, default=None):
     return ans
 
 
+def set_permissions(user):
+    all_perms = ["revoke_tokens", "manage_users"]
+    new_user_perms = []
+    for perm in all_perms:
+        if get_input("Give {} the permission {}? [y/N] ".format(user, perm), ["y", "n"], "n") == "y":
+            new_user_perms.append(perm)
+    user_type = get_input("Should the user: Send computer data, View computer data, or Both? [s/v/b]", ["s", "v", "b"])
+    if user_type in ["s", "b"]:
+        new_user_perms.append("computer_user")
+    if user_type in ["v", "b"]:
+        new_user_perms.append("client_user")
+    db["users"][user.lower()]["permissions"] = new_user_perms
+
+
 def settings_manager():
     opt = ""
     while opt != "0" and opt.lower() != "e":
@@ -87,7 +101,7 @@ def settings_manager():
             try:
                 new_port = int(new_port)
             except ValueError:
-                print("NaN!")
+                print("Not a Number!")
                 continue
             db["port"] = new_port
         elif opt == "2":
@@ -97,7 +111,7 @@ def settings_manager():
 def user_manager():
     opt = ""
     while opt != "0" and opt.lower() != "e":
-        opt = get_input("1 - Add User\n2 - Remove/List User(s)\n3 - Change Password of User\n0/e - Exit\n", ["1", "2", "3", "0", "e", "E"])
+        opt = get_input("1 - Add User\n2 - Edit/List User(s)\n3 - Change Password of User\n0/e - Exit\n", ["1", "2", "3", "0", "e", "E"])
         if opt == "1":
             user = input("Enter Username: ")
             try:
@@ -109,30 +123,27 @@ def user_manager():
                 if password != pass_two:
                     print("Passwords don't match!")
                 else:
-                    all_perms = ["revoke_tokens"]
-                    new_user_perms = []
-                    for perm in all_perms:
-                        if get_input("Give {} the permission {}? [y/N] ".format(user, perm), ["y", "n"], "n") == "y":
-                            new_user_perms.append(perm)
-                    user_type = get_input("Should the user: Send computer data, View computer data, or Both? [s/v/b]", ["s", "v", "b"])
-                    if user_type in ["s", "b"]:
-                        new_user_perms.append("computer_user")
-                    if user_type in ["v", "b"]:
-                        new_user_perms.append("client_user")
-                    db["users"][user.lower()] = {"password": bcrypt.hashpw(password.encode('utf-8'), bcrypt.gensalt()).decode("utf-8"), "permissions": new_user_perms}
+                    db["users"][user.lower()] = {"password": bcrypt.hashpw(password.encode('utf-8'), bcrypt.gensalt()).decode("utf-8")}
+                    set_permissions(user.lower())
         elif opt == "2":
             print("\n\n")
             c = 0
             for user in db["users"].keys():
                 print("{c} - {u}".format(c=c, u=user))
                 c += 1
-            to_del = input("E to exit, or the number to delete the specified user: ")
+            to_del = input("E to exit, or the number to edit the specified user: ")
             if to_del.lower() != "e":
                 try:
-                    to_del = int(to_del)
-                    del db["users"][list(db["users"].keys())[to_del]]
+                    to_edit = int(to_del)
+                    opt = get_input("d to delete, p to re-do permissions, e to exit: ", ['d', 'p', 'e'], 'e')
+                    if opt == "d":
+                        del db["users"][list(db["users"].keys())[to_edit]]
+                    elif opt == "p":
+                        set_permissions(list(db["users"].keys())[to_edit])
+                    elif opt == "e":
+                        continue
                 except ValueError:
-                    print("NaN!")
+                    print("Not a Number!")
         elif opt == "3":
             print("\n\n")
             c = 0

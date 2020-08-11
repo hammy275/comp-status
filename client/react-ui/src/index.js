@@ -143,6 +143,27 @@ class TokenManager extends React.Component {
 }
 
 
+class UserManager extends React.Component {
+    render() {
+        if (!this.props.showUserManager) {
+            return null
+        } else if (!this.props.canShow) {
+            return (
+                <SmallHero isVisible="true" heroType="is-danger" textColor={this.props.textColor} text="Your user account does not have the 'manage_users' permission!"/>
+            )
+        }
+        return (
+            <div>
+                <Button textColor={this.props.buttonTextColor} handleClick={this.props.refreshUsers} value="Refresh User List" buttonType="is-success"/>
+                <br/>
+                <Dropdown handleChange={this.props.userHandle} items={this.props.userList} textColor={this.props.textColor} bgColor={this.props.bgColor}/>
+                <Button textColor={this.props.buttonTextColor} handleClick={this.props.deleteUser} value="Delete Selected User" buttonType="is-danger"/>
+            </div>
+        )
+    }
+}
+
+
 class ComputerInfo extends React.Component {
     constructor(props) {
         super(props);
@@ -155,7 +176,7 @@ class ComputerInfo extends React.Component {
         this.state = {ip: ip, username: username, password: "", isDark: isDark, useCookies: useCookiesFromCookie, token: token,
         permaToken: permaToken, computerData: {}, haveGoodData: false, selectedComputer: null, statusInfo: "Waiting for data...",
         statusHeroType: "is-info", showTokenManager: false, selectedPermaToken: null, selectedTempToken: null, permissions: [],
-        tempTokens: [], permaTokens: [], failCount: 0};
+        tempTokens: [], permaTokens: [], failCount: 0, showUserManager: false, userList: [], selectedUser: null};
 
         this.getIP = this.getIP.bind(this);
         this.getUsername = this.getUsername.bind(this);
@@ -173,6 +194,11 @@ class ComputerInfo extends React.Component {
         this.deletePermaToken = this.deletePermaToken.bind(this);
         this.deleteTempToken = this.deleteTempToken.bind(this);
         this.afterTokenDelete = this.afterTokenDelete.bind(this);
+        this.handleUserList = this.handleUserList.bind(this);
+        this.refreshUsers = this.refreshUsers.bind(this);
+        this.userHandle = this.userHandle.bind(this);
+        this.deleteUser = this.deleteUser.bind(this);
+        this.afterUserDelete = this.afterUserDelete.bind(this);
 
         this.postWithAuth("https://" + this.state.ip + "/give_data", {}, this.endGetComputerData);
     }
@@ -219,9 +245,10 @@ class ComputerInfo extends React.Component {
             if (this.state.useCookies) {
                 setCookie("token", this.state.token);
                 setCookie("canToken", this.state.permissions.includes("revoke_tokens").toString());
+                setCookie("canManageUsers", this.state.permissions.includes("manage_users").toString());
             }
             this.postWithAuth(url, data, endFunction)
-        } else if (returned["message"] === "Data successfully received!") {
+        } else if (returned["message"].includes("uccess")) {
             this.setState({haveGoodData: true, statusHeroType: "is-success", statusInfo: returned["message"], failCount: 0});
             endFunction(returned);
         } else if (returned["message"].includes("Unauthorized")) {
@@ -234,7 +261,7 @@ class ComputerInfo extends React.Component {
                 this.setState({permaToken: null, failCount: 0});
             }
         } else if (returned["message"] === "No permission!") {
-            this.setState({token: null, permaToken: null, statusInfo: "User account does not have permission to see computer data!", statusHeroType: "is-danger"});
+            this.setState({token: null, permaToken: null, statusInfo: "User account does not have permission to perform the requested action!", statusHeroType: "is-danger"});
             delCookie("token");
             delCookie("permaToken");
         } else if (returned["error"] !== 200) {
@@ -342,6 +369,10 @@ class ComputerInfo extends React.Component {
         this.setState({permaTokens: permaTokensList, tempTokens: Object.keys(returned["temp_tokens"])});
     }
 
+    handleUserList(returned) {
+        this.setState({userList: Object.keys(returned["users"])});
+    }
+
     refreshTokens() {
         this.postWithAuth("https://" + this.state.ip + "/get_tokens", {}, this.handleTokenRequest);
     }
@@ -360,12 +391,32 @@ class ComputerInfo extends React.Component {
         this.setState({statusInfo: returned["message"], statusHeroType: heroType});
     }
 
+    afterUserDelete(returned) {
+        this.setState({statusHeroType: "is-success", statusInfo: returned["message"], selectedUser: null, userList: removeFromArray(this.state.userList, this.state.selectedUser)});
+    }
+
     deleteTempToken() {
         this.postWithAuth("https://" + this.state.ip + "/delete_token", {"type": "temp", "token_to_delete": this.state.selectedTempToken}, this.afterTokenDelete);
     }
 
     deletePermaToken() {
         this.postWithAuth("https://" + this.state.ip + "/delete_token", {"type": "perma", "token_to_delete": this.state.selectedPermaToken}, this.afterTokenDelete);
+    }
+
+    deleteUser() {
+        if (this.state.selectedUser) {
+            this.postWithAuth("https://" + this.state.ip + "/delete_user", {"user_to_delete": this.state.selectedUser}, this.afterUserDelete);
+        }
+    }
+
+    refreshUsers() {
+        this.postWithAuth("https://" + this.state.ip + "/list_users", {}, this.handleUserList);
+    }
+
+    userHandle(event) {
+        if (event.target.value !== "Select a user...") {
+            this.setState({selectedUser: event.target.value});
+        }
     }
 
     render() {
@@ -401,8 +452,10 @@ class ComputerInfo extends React.Component {
         let cpuTempHeroType = "is-success";
         let cpuUsageHeroType = "is-success";
         let canToken = this.state.permissions.includes("revoke_tokens") || readCookie("canToken", "false") === "true";
+        let canManageUsers = this.state.permissions.includes("manage_users") || readCookie("canManageUsers", "false") === "true";
         let tempTokens = ["Select a temporary token..."];
         let permaTokens = ["Select a permanent token..."];
+        let userList = ["Select a user..."]
         if (this.state.haveGoodData) {
             computers = computers.concat(Object.keys(this.state.computerData));
             if (this.state.selectedComputer && this.state.selectedComputer !== "Select a computer...") {
@@ -452,6 +505,8 @@ class ComputerInfo extends React.Component {
             if (canToken) {
                 tempTokens = tempTokens.concat(this.state.tempTokens);
                 permaTokens = permaTokens.concat(this.state.permaTokens);
+            } if (canManageUsers) {
+                userList = userList.concat(this.state.userList);
             }
 
         }
@@ -493,6 +548,12 @@ class ComputerInfo extends React.Component {
                         <br/>
                         <br/>
                         <TokenManager deleteTempToken={this.deleteTempToken} deletePermaToken={this.deletePermaToken} buttonTextColor={buttonTextColor} refreshTokens={this.refreshTokens} canShow={canToken} showTokenManager={this.state.showTokenManager} tempTokenHandle={this.tempTokenHandle} permaTokenHandle={this.permaTokenHandle} tempTokens={tempTokens} permaTokens={permaTokens} textColor={textColor} bgColor={backgroundColor}/>
+                    </div>
+                    <div className="column is-one-third">
+                        <Button textColor={buttonTextColor} handleClick={() => this.setState({showUserManager: !this.state.showUserManager})} value="Show User Manager" buttonType="is-info"/>
+                        <br/>
+                        <br/>
+                        <UserManager deleteUser={this.deleteUser} userHandle={this.userHandle} refreshUsers={this.refreshUsers} showUserManager={this.state.showUserManager} canShow={canManageUsers} textColor={textColor} buttonTextColor={buttonTextColor} bgColor={backgroundColor} userList={userList}/>
                     </div>
                 </div>
             </div>

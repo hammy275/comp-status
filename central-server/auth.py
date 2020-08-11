@@ -199,3 +199,15 @@ def get_temp_token(user, perma_token):
             return {"message": "Unauthorized!"}
     except KeyError:
         return {"message": "Unauthorized!"}
+
+
+def delete_user(user):
+    del db["users"][user]
+    write_db()
+    return {"message": "Successfully deleted user!"}
+
+
+def add_user(user, password, permissions):
+    db["users"][user.lower()] = {"password": bcrypt.hashpw(password.encode('utf-8'), bcrypt.gensalt()).decode("utf-8"), "permissions": permissions}
+    write_db()
+    return {"message": "User successfully added!"}
