@@ -129,14 +129,7 @@ class SettingManager extends React.Component {
      *  buttonTextColor - Color for button text
      *  elemType - String of the type of thing being managed; "Token", "User", etc.
      *  refreshFunction - Function used to refresh lists 
-     * dropdowns - See below
-     * 
-     * Dropdowns Prop:
-     *  An array of key-value pairs, consisting of the following:
-     *      handleChange - Function to call when a different dropdown selection is chosen
-     *      items - Items for the dropdown
-     *      handleClick - Function to call when button is clicked
-     *      elemType - String of the type of thing being managed (see elemType above, except for this specific button)
+     *  elems - Elements to have inside the manager
      */
     render() {
         if (!this.props.showManager) {
@@ -150,12 +143,28 @@ class SettingManager extends React.Component {
                 <Button textColor={this.props.buttonTextColor} handleClick={this.props.refreshFunction} value={"Refresh " + this.props.elemType + " List"} buttonType="is-success"/>,
                 <br/>
             ]
-            for (let i = 0; i < this.props.dropdowns.length; i++) {
-                elems.push(<Dropdown handleChange={this.props.dropdowns[i]["handleChange"]} items={this.props.dropdowns[i]["items"]} textColor={this.props.textColor} bgColor={this.props.bgColor}/>);
-                elems.push(<Button textColor={this.props.buttonTextColor} handleClick={this.props.dropdowns[i]["handleClick"]} value={"Delete Selected " + this.props.dropdowns[i]["elemType"]} buttonType="is-danger"/>);
-            }
-           return (elems);
+            let all_elems = elems.concat(this.props.elems)
+           return (all_elems);
         }
+    }
+}
+
+class DropdownButton extends React.Component {
+    /**
+     * Props:
+     *  handleChange - Function called when dropdown is changed
+     *  items - List of items for dropdown
+     *  textColor - Text color
+     *  bgColor - Background color
+     *  buttonTextColor - Color for button text
+     *  handleClick - Function to call when button is clicked
+     *  buttonLabel - Label for button next to dropdown
+     */
+    render() {
+        let elems = [];
+        elems.push(<Dropdown handleChange={this.props.handleChange} items={this.props.items} textColor={this.props.textColor} bgColor={this.props.bgColor}/>)
+        elems.push(<Button textColor={this.props.buttonTextColor} handleClick={this.props.handleClick} value={this.props.buttonLabel} buttonType="is-danger"/>)
+        return(elems);
     }
 }
 
@@ -543,20 +552,17 @@ class ComputerInfo extends React.Component {
                         <Button textColor={buttonTextColor} handleClick={() => this.setState({showTokenManager: !this.state.showTokenManager})} value="Show Token Manager" buttonType="is-info"/>
                         <br/>
                         <br/>
-                        <SettingManager
+                        <SettingManager 
                             showManager={this.state.showTokenManager} hasPermission={canToken} textColor={textColor} bgColor={backgroundColor} buttonTextColor={buttonTextColor}
-                            elemType="Token" refreshFunction={this.refreshTokens} dropdowns={[
-                                {
-                                    "handleChange": this.tempTokenHandle,
-                                    "items": tempTokens,
-                                    "handleClick": this.deleteTempToken,
-                                    "elemType": "Temporary Token"
-                                }, {
-                                    "handleChange": this.permaTokenHandle,
-                                    "items": permaTokens,
-                                    "handleClick": this.deletePermaToken,
-                                    "elemType": "Permanent Token"
-                                }
+                            elemType="Token" refreshFunction={this.refreshTokens} elems={[
+                                <DropdownButton 
+                                    handleChange={this.tempTokenHandle} items={tempTokens} textColor={textColor} bgColor={backgroundColor} buttonTextColor={buttonTextColor}
+                                    handleClick={this.deleteTempToken} buttonLabel="Delete Selected Temporary Token"
+                                />,
+                                <DropdownButton 
+                                    handleChange={this.permaTokenHandle} items={permaTokens} textColor={textColor} bgColor={backgroundColor} buttonTextColor={buttonTextColor}
+                                    handleClick={this.deletePermaToken} buttonLabel="Delete Selected Permanent Token"
+                                />
                             ]}
                         />
                     </div>
@@ -566,13 +572,11 @@ class ComputerInfo extends React.Component {
                         <br/>
                         <SettingManager
                             showManager={this.state.showUserManager} hasPermission={canManageUsers} textColor={textColor} bgColor={backgroundColor} buttonTextColor={buttonTextColor}
-                            elemType="User" refreshFunction={this.refreshUsers} dropdowns={[
-                                {
-                                    "handleChange": this.userHandle,
-                                    "items": userList,
-                                    "handleClick": this.deleteUser,
-                                    "elemType": "User"
-                                }
+                            elemType="User" refreshFunction={this.refreshUsers} elems={[
+                                <DropdownButton 
+                                    handleChange={this.userHandle} items={userList} textColor={textColor} bgColor={backgroundColor}
+                                    buttonTextColor={buttonTextColor} handleClick={this.deleteUser} buttonLabel="Delete Selected User"
+                                />
                             ]}
                         />
                     </div>
