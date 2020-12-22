@@ -139,6 +139,7 @@ class SettingManager extends React.Component {
      *  elemType - String of the type of thing being managed; "Token", "User", etc.
      *  refreshFunction - Function used to refresh lists 
      *  elems - Elements to have inside the manager
+     *  label (optional) - Label for settings manager
      */
     render() {
         if (!this.props.showManager) {
@@ -148,11 +149,13 @@ class SettingManager extends React.Component {
                 <SmallHero isVisible="true" heroType="is-danger" textColor={this.props.textColor} text="Your user account does not have permission to adjust this setting!"/>
             );
         } else {
-            let elems = [
-                <Button textColor={this.props.buttonTextColor} handleClick={this.props.refreshFunction} value={"Refresh " + this.props.elemType + " List"} buttonType="is-success"/>,
-                <br/>
-            ]
-            let all_elems = elems.concat(this.props.elems)
+            let elems = [];
+            if (this.props.label) {
+                elems.push(<label className="label" style={{color: this.props.textColor}}>{this.props.label}</label>);
+            }
+            elems.push(<Button textColor={this.props.buttonTextColor} handleClick={this.props.refreshFunction} value={"Refresh " + this.props.elemType + " List"} buttonType="is-success"/>);
+            elems.push(<br/>);
+            let all_elems = elems.concat(this.props.elems);
            return (all_elems);
         }
     }
@@ -649,14 +652,15 @@ class ComputerInfo extends React.Component {
                         <br/>
                         <SettingManager
                             showManager={this.state.showUserManager} hasPermission={canManageUsers} textColor={textColor} bgColor={backgroundColor} buttonTextColor={buttonTextColor}
-                            elemType="User" refreshFunction={this.refreshUsers} elems={[
+                            elemType="User" refreshFunction={this.refreshUsers} label="Remove Users: " elems={[
                                 <DropdownButton 
                                     handleChange={this.userHandle} items={userList} textColor={textColor} bgColor={backgroundColor}
                                     buttonTextColor={buttonTextColor} handleClick={this.deleteUser} buttonLabel="Delete Selected User"
-                                />,
-                                <InputButton textColor={textColor} bgColor={backgroundColor} buttonTextColor={buttonTextColor} label="Username" buttonLabel="Add User" type="text"
+                                />, <br/>, <br/>, <br/>,
+                                <label className="label" style={{color: textColor}}>Add Users:</label>,
+                                <InputButton textColor={textColor} bgColor={backgroundColor} buttonTextColor={buttonTextColor} label="New User's Username: " buttonLabel="Add User" type="text"
                                 handleClick={this.addUser}/>,
-                                <InputField value={this.state.newUserPassword} bgColor={backgroundColor} textColor={textColor} handleChange={(val) => this.setState({newUserPassword: val})} inputText="Password: " type="password"/>,
+                                <InputField value={this.state.newUserPassword} bgColor={backgroundColor} textColor={textColor} handleChange={(val) => this.setState({newUserPassword: val})} inputText=" New User's Password: " type="password"/>,
                                 <CheckboxLabel textColor={textColor} label="New User can Manage Users: " handleChange={(val) => this.handleNewUserP("manage_users")}/>,
                                 <CheckboxLabel textColor={textColor} label="New User can Revoke Tokens " handleChange={(val) => this.handleNewUserP("revoke_tokens")}/>,
                                 <CheckboxLabel textColor={textColor} label="New User can See Computer Info: " handleChange={(val) => this.handleNewUserP("client_user")}/>,
