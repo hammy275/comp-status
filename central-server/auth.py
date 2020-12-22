@@ -208,6 +208,8 @@ def delete_user(user):
 
 
 def add_user(user, password, permissions):
+    if user.lower() in db["users"]:
+        return {"message": "User already exists!"}
     db["users"][user.lower()] = {"password": bcrypt.hashpw(password.encode('utf-8'), bcrypt.gensalt()).decode("utf-8"), "permissions": permissions}
     write_db()
     return {"message": "User successfully added!"}

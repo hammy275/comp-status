@@ -63,6 +63,15 @@ class Button extends React.Component {
 }
 
 class InputField extends React.Component {
+    /** 
+     * Params:
+     *  handleChange - Function to run on text change.
+     *  value (optional) - Text to put in field
+     *  textColor - Text color
+     *  bgColor - Background color
+     *  inputText - Label for text box
+     *  type - Type of input ("text", "password", etc.)
+    */
     constructor(props) {
         super(props);
         this.handleChange = this.handleChange.bind(this);
@@ -168,6 +177,48 @@ class DropdownButton extends React.Component {
     }
 }
 
+class InputButton extends React.Component {
+    /**
+     * Props:
+     *  textColor - Text color
+     *  bgColor - Background color
+     *  buttonTextColor - Color for button text
+     *  label - Label for text box
+     *  buttonLabel - Label for button
+     *  handleClick - Function to handle button click. Must accept a string, which contains the value in the textbox
+     *  type - Text type
+     */
+    constructor(props) {
+        super(props);
+        this.state = {value: ""};
+    }
+    render() {
+        let elems = [];
+        elems.push(<InputField value={this.state["value"]} textColor={this.props.textColor} bgColor={this.props.bgColor} inputText={this.props.label} type={this.props.type} handleChange={(value) => this.setState({value: value})}/>);
+        elems.push(<Button textColor={this.props.buttonTextColor} handleClick={() => this.props.handleClick(this.state["value"])} value={this.props.buttonLabel} buttonType="is-success"/>);
+        return(elems);
+    }
+}
+
+class Checkbox extends React.Component {
+    render() {
+        return (
+            <input type="checkbox" onChange={(event) => this.props.handleChange(event.target.checked)}/>
+        );
+    }
+}
+
+class CheckboxLabel extends React.Component {
+    render() {
+        return (
+            <label className="label" style={{color: this.props.textColor}}>
+                {this.props.label}
+                <Checkbox handleChange={this.props.handleChange}/>
+            </label>
+        );
+    }
+}
+
 
 class ComputerInfo extends React.Component {
     constructor(props) {
@@ -181,7 +232,8 @@ class ComputerInfo extends React.Component {
         this.state = {ip: ip, username: username, password: "", isDark: isDark, useCookies: useCookiesFromCookie, token: token,
         permaToken: permaToken, computerData: {}, haveGoodData: false, selectedComputer: null, statusInfo: "Waiting for data...",
         statusHeroType: "is-info", showTokenManager: false, selectedPermaToken: null, selectedTempToken: null, permissions: [],
-        tempTokens: [], permaTokens: [], failCount: 0, showUserManager: false, userList: [], selectedUser: null};
+        tempTokens: [], permaTokens: [], failCount: 0, showUserManager: false, userList: [], selectedUser: null, newUserPermissions: [],
+        newUserPassword: ""};
 
         this.getIP = this.getIP.bind(this);
         this.getUsername = this.getUsername.bind(this);
@@ -204,6 +256,9 @@ class ComputerInfo extends React.Component {
         this.userHandle = this.userHandle.bind(this);
         this.deleteUser = this.deleteUser.bind(this);
         this.afterUserDelete = this.afterUserDelete.bind(this);
+        this.handleNewUserP = this.handleNewUserP.bind(this);
+        this.addUser = this.addUser.bind(this);
+        this.handleAddUser = this.handleAddUser.bind(this);
 
         this.postWithAuth("https://" + this.state.ip + "/give_data", {}, this.endGetComputerData);
     }
@@ -424,6 +479,28 @@ class ComputerInfo extends React.Component {
         }
     }
 
+    handleNewUserP(permission) {
+        let perms = this.state["newUserPermissions"];
+        if (perms.includes(permission)) {
+            perms.splice(perms.indexOf(permission), 1);
+        } else {
+            perms.push(permission);
+        }
+        this.setState({newUserPermissions: perms});
+    }
+
+    addUser(new_user) {
+        this.postWithAuth("https://" + this.state.ip + "/add_user", {"user_to_add": new_user, "password_of_user": this.state["newUserPassword"], permissions: this.state["newUserPermissions"]}, this.handleAddUser);
+    }
+
+    handleAddUser(returned) {
+        let heroType = "is-danger";
+        if (returned["message"] === "User successfully added!") {
+            heroType = "is-success"
+        }
+        this.setState({statusInfo: returned["message"], statusHeroType: heroType});
+    }
+
     render() {
         let textColor;
         let backgroundColor;
@@ -576,7 +653,14 @@ class ComputerInfo extends React.Component {
                                 <DropdownButton 
                                     handleChange={this.userHandle} items={userList} textColor={textColor} bgColor={backgroundColor}
                                     buttonTextColor={buttonTextColor} handleClick={this.deleteUser} buttonLabel="Delete Selected User"
-                                />
+                                />,
+                                <InputButton textColor={textColor} bgColor={backgroundColor} buttonTextColor={buttonTextColor} label="Username" buttonLabel="Add User" type="text"
+                                handleClick={this.addUser}/>,
+                                <InputField value={this.state.newUserPassword} bgColor={backgroundColor} textColor={textColor} handleChange={(val) => this.setState({newUserPassword: val})} inputText="Password: " type="password"/>,
+                                <CheckboxLabel textColor={textColor} label="New User can Manage Users: " handleChange={(val) => this.handleNewUserP("manage_users")}/>,
+                                <CheckboxLabel textColor={textColor} label="New User can Revoke Tokens " handleChange={(val) => this.handleNewUserP("revoke_tokens")}/>,
+                                <CheckboxLabel textColor={textColor} label="New User can See Computer Info: " handleChange={(val) => this.handleNewUserP("client_user")}/>,
+                                <CheckboxLabel textColor={textColor} label="New User can Send Computer Info: " handleChange={(val) => this.handleNewUserP("computer_user")}/>
                             ]}
                         />
                     </div>
