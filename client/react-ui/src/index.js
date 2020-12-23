@@ -140,16 +140,22 @@ class SettingManager extends React.Component {
      *  refreshFunction - Function used to refresh lists 
      *  elems - Elements to have inside the manager
      *  label (optional) - Label for settings manager
+     *  showLabel - Label for button to show/hide the manager.
      */
+    constructor(props) {
+        super(props);
+        this.state = {show: false};
+    }
     render() {
-        if (!this.props.showManager) {
-            return null;
+        let button = <Button textColor={this.props.buttonTextColor} handleClick={() => this.setState({show: !this.state.show})} value={this.props.showLabel} buttonType="is-info"/>;
+        if (!this.state.show) {
+            return button;
         } else if (!this.props.hasPermission) {
-            return (
-                <SmallHero isVisible="true" heroType="is-danger" textColor={this.props.textColor} text="Your user account does not have permission to adjust this setting!"/>
-            );
+            let elems = [button, <br/>, <br/>];
+            elems.push(<SmallHero isVisible="true" heroType="is-danger" textColor={this.props.textColor} text="Your user account does not have permission to adjust this setting!"/>);
+            return elems;
         } else {
-            let elems = [];
+            let elems = [button, <br/>, <br/>];
             if (this.props.label) {
                 elems.push(<label className="label" style={{color: this.props.textColor}}>{this.props.label}</label>);
             }
@@ -234,8 +240,8 @@ class ComputerInfo extends React.Component {
         let permaToken = readCookie("permaToken") ? readCookie("permaToken") : "";
         this.state = {ip: ip, username: username, password: "", isDark: isDark, useCookies: useCookiesFromCookie, token: token,
         permaToken: permaToken, computerData: {}, haveGoodData: false, selectedComputer: null, statusInfo: "Waiting for data...",
-        statusHeroType: "is-info", showTokenManager: false, selectedPermaToken: null, selectedTempToken: null, permissions: [],
-        tempTokens: [], permaTokens: [], failCount: 0, showUserManager: false, userList: [], selectedUser: null, newUserPermissions: [],
+        statusHeroType: "is-info", selectedPermaToken: null, selectedTempToken: null, permissions: [],
+        tempTokens: [], permaTokens: [], failCount: 0, userList: [], selectedUser: null, newUserPermissions: [],
         newUserPassword: ""};
 
         this.getIP = this.getIP.bind(this);
@@ -269,8 +275,6 @@ class ComputerInfo extends React.Component {
     componentDidMount() {
         setInterval(() => this.postWithAuth("https://" + this.state.ip + "/give_data", {}, this.endGetComputerData), 5000);
     }
-
-    // BEGIN BACKEND LOGIC
 
     httpPost(url, data) {
         // Get ready to send HTTP POST request, and define a function to run when sent.
@@ -363,9 +367,6 @@ class ComputerInfo extends React.Component {
     endGetComputerData(returned) {
         this.setState({computerData: returned["data"], haveGoodData: true});
     }
-
-    // END BACKEND LOGIC
-    // BEGIN FRONTEND LOGIC
 
     getIP(ip) {
         this.setState({ip: ip});
@@ -629,11 +630,8 @@ class ComputerInfo extends React.Component {
                 </div>
                 <div className="columns">
                     <div className="column is-one-third">
-                        <Button textColor={buttonTextColor} handleClick={() => this.setState({showTokenManager: !this.state.showTokenManager})} value="Show Token Manager" buttonType="is-info"/>
-                        <br/>
-                        <br/>
                         <SettingManager 
-                            showManager={this.state.showTokenManager} hasPermission={canToken} textColor={textColor} bgColor={backgroundColor} buttonTextColor={buttonTextColor}
+                            showLabel="Show Token Manager" hasPermission={canToken} textColor={textColor} bgColor={backgroundColor} buttonTextColor={buttonTextColor}
                             elemType="Token" refreshFunction={this.refreshTokens} elems={[
                                 <DropdownButton 
                                     handleChange={this.tempTokenHandle} items={tempTokens} textColor={textColor} bgColor={backgroundColor} buttonTextColor={buttonTextColor}
@@ -647,11 +645,8 @@ class ComputerInfo extends React.Component {
                         />
                     </div>
                     <div className="column is-one-third">
-                        <Button textColor={buttonTextColor} handleClick={() => this.setState({showUserManager: !this.state.showUserManager})} value="Show User Manager" buttonType="is-info"/>
-                        <br/>
-                        <br/>
                         <SettingManager
-                            showManager={this.state.showUserManager} hasPermission={canManageUsers} textColor={textColor} bgColor={backgroundColor} buttonTextColor={buttonTextColor}
+                            showLabel={"Show User Manager"} hasPermission={canManageUsers} textColor={textColor} bgColor={backgroundColor} buttonTextColor={buttonTextColor}
                             elemType="User" refreshFunction={this.refreshUsers} label="Remove Users: " elems={[
                                 <DropdownButton 
                                     handleChange={this.userHandle} items={userList} textColor={textColor} bgColor={backgroundColor}
