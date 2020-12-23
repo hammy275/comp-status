@@ -11,7 +11,7 @@ Although this program does use bcrypt to store passwords, and communication is d
 
 * Python 3.6 or later
 * Pip to install the requirements.txt
-* A working ability to build React projects (central-server computer only)
+* Node.js to build the client (`central-server` computer only)
 
 ## Folders
 
@@ -20,3 +20,7 @@ Although this program does use bcrypt to store passwords, and communication is d
 `server`: Contains the server program used. This should be run on computers that resources should be monitored on. The IP address requested on first run should point to the computer running `central-server`.
 
 `client`: Contains a client/clients that connect to `central-server` to retrieve information about computers. The IP address requested on first run should point to the computer running `central-server`.
+
+## Setup
+
+See [the setup wiki page](https://github.com/hammy3502/comp-status/wiki/Setup)
