@@ -147,15 +147,10 @@ class SettingManager extends React.Component {
         this.state = {show: false};
     }
     render() {
-        let button = <Button textColor={this.props.buttonTextColor} handleClick={() => this.setState({show: !this.state.show})} value={this.props.showLabel} buttonType="is-info"/>;
-        if (!this.state.show) {
-            return button;
-        } else if (!this.props.hasPermission) {
-            let elems = [button, <br/>, <br/>];
-            elems.push(<SmallHero isVisible="true" heroType="is-danger" textColor={this.props.textColor} text="Your user account does not have permission to adjust this setting!"/>);
-            return elems;
+        if (!this.props.hasPermission) {
+            return <SmallHero isVisible="true" heroType="is-danger" textColor={this.props.textColor} text="Your user account does not have permission to adjust this setting!"/>
         } else {
-            let elems = [button, <br/>, <br/>];
+            let elems = [];
             if (this.props.label) {
                 elems.push(<label className="label" style={{color: this.props.textColor}}>{this.props.label}</label>);
             }
@@ -225,6 +220,43 @@ class CheckboxLabel extends React.Component {
                 <Checkbox handleChange={this.props.handleChange}/>
             </label>
         );
+    }
+}
+
+class Modal extends React.Component {
+    /**
+     * Props:
+     *  elem - Element to show when opening modal
+     *  buttonTextColor - Text color of button
+     *  label - Label for modal button
+     */
+    constructor(props) {
+        super(props);
+        this.state = {show: false};
+        this.toggleState = this.toggleState.bind(this);
+    }
+    toggleState() {
+        if (this.state.show) {
+            window.onscroll = function () {};
+        } else {
+            window.onscroll = () => window.scrollTo(0, 0);
+        }
+        this.setState({show: !this.state.show})
+    }
+    render() {
+        if (this.state.show) {
+            window.scrollTo(0, 0);
+            return (
+            <div>
+                <div className="modal-background" onClick={this.toggleState}></div>
+                <div className="modal-content" style={{position: "fixed", left: "2%", top:"15%", right: "15%"}}>
+                    {this.props.elem}
+                </div>
+                <button className="modal-close is-large" onClick={this.toggleState}></button>
+            </div>);
+        } else {
+            return <Button textColor={this.props.buttonTextColor} handleClick={this.toggleState} value={this.props.label} buttonType="is-success"/>
+        }
     }
 }
 
@@ -630,7 +662,9 @@ class ComputerInfo extends React.Component {
                 </div>
                 <div className="columns">
                     <div className="column is-one-third">
-                        <SettingManager 
+                        <Modal buttonTextColor={buttonTextColor} label="Open Token Manager"
+                        elem={
+                            <SettingManager 
                             showLabel="Show Token Manager" hasPermission={canToken} textColor={textColor} bgColor={backgroundColor} buttonTextColor={buttonTextColor}
                             elemType="Token" refreshFunction={this.refreshTokens} elems={[
                                 <DropdownButton 
@@ -643,9 +677,13 @@ class ComputerInfo extends React.Component {
                                 />
                             ]}
                         />
+                        }
+                        />
                     </div>
                     <div className="column is-one-third">
-                        <SettingManager
+                        <Modal buttonTextColor={buttonTextColor} label="Open User Manager"
+                        elem={
+                            <SettingManager
                             showLabel={"Show User Manager"} hasPermission={canManageUsers} textColor={textColor} bgColor={backgroundColor} buttonTextColor={buttonTextColor}
                             elemType="User" refreshFunction={this.refreshUsers} label="Remove Users: " elems={[
                                 <DropdownButton 
@@ -661,6 +699,8 @@ class ComputerInfo extends React.Component {
                                 <CheckboxLabel textColor={textColor} label="New User can See Computer Info: " handleChange={(val) => this.handleNewUserP("client_user")}/>,
                                 <CheckboxLabel textColor={textColor} label="New User can Send Computer Info: " handleChange={(val) => this.handleNewUserP("computer_user")}/>
                             ]}
+                        />
+                        }
                         />
                     </div>
                 </div>
