@@ -255,7 +255,7 @@ class Modal extends React.Component {
                 <button className="modal-close is-large" onClick={this.toggleState}></button>
             </div>);
         } else {
-            return <Button textColor={this.props.buttonTextColor} handleClick={this.toggleState} value={this.props.label} buttonType="is-success"/>
+            return <Button textColor={this.props.buttonTextColor} handleClick={this.toggleState} value={this.props.label} buttonType="is-info"/>
         }
     }
 }
