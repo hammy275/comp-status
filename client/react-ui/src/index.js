@@ -332,7 +332,7 @@ class ComputerInfo extends React.Component {
 
     confirmAuth(returned, url, data, endFunction) {
         if (returned["message"] === "Generated perma-token!") {
-            this.setState({permaToken: returned["token"]});
+            this.setState({permaToken: returned["token"], statusHeroType: "is-info", statusInfo: "Authenticating..."});
             if (this.state.useCookies) {
                 setCookie("permaToken", this.state.permaToken, 1000*60*60*24*36500);
                 setCookie("ipAddress", this.state.ip, 1000*60*60*24*36500);
@@ -340,7 +340,7 @@ class ComputerInfo extends React.Component {
             }
             this.postWithAuth(url, data, endFunction);
         } else if (returned["message"] === "Generated temporary-token!") {
-            this.setState({token: returned["token"], permissions: returned["permissions"]});
+            this.setState({token: returned["token"], permissions: returned["permissions"], statusHeroType: "is-info", statusInfo: "Fetching Data..."});
             if (this.state.useCookies) {
                 setCookie("token", this.state.token);
                 setCookie("canToken", this.state.permissions.includes("revoke_tokens").toString());
