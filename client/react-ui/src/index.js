@@ -144,12 +144,16 @@ class SettingManager extends React.Component {
      */
     constructor(props) {
         super(props);
-        this.state = {show: false};
+        this.state = {show: false, firstRefresh: false};
     }
     render() {
         if (!this.props.hasPermission) {
             return <SmallHero isVisible="true" heroType="is-danger" textColor={this.props.textColor} text="Your user account does not have permission to adjust this setting!"/>
         } else {
+            if (!this.state.firstRefresh) {
+                this.props.refreshFunction();
+                this.setState({firstRefresh: true});
+            }
             let elems = [];
             if (this.props.label) {
                 elems.push(<label className="label" style={{color: this.props.textColor}}>{this.props.label}</label>);
@@ -229,6 +233,7 @@ class Modal extends React.Component {
      *  elem - Element to show when opening modal
      *  buttonTextColor - Text color of button
      *  label - Label for modal button
+     *  onClose (optional) - Optional function to call when closing
      */
     constructor(props) {
         super(props);
@@ -237,6 +242,9 @@ class Modal extends React.Component {
     }
     toggleState() {
         if (this.state.show) {
+            if (this.props.onClose) {
+                this.props.onClose();
+            }
             window.onscroll = function () {};
         } else {
             window.onscroll = () => window.scrollTo(0, 0);
@@ -248,8 +256,8 @@ class Modal extends React.Component {
             window.scrollTo(0, 0);
             return (
             <div>
-                <div className="modal-background" onClick={this.toggleState}></div>
-                <div className="modal-content" style={{position: "fixed", left: "2%", top:"15%", right: "15%"}}>
+                <div className="modal-background" onClick={this.toggleState} style={{height: "250vh"}}></div>
+                <div className="modal-content" style={{position: "fixed", left: "2%", top:"15%", right: "15%", height: "100vh"}}>
                     {this.props.elem}
                 </div>
                 <button className="modal-close is-large" onClick={this.toggleState}></button>
@@ -685,7 +693,8 @@ class ComputerInfo extends React.Component {
                         elem={
                             <SettingManager
                             showLabel={"Show User Manager"} hasPermission={canManageUsers} textColor={textColor} bgColor={backgroundColor} buttonTextColor={buttonTextColor}
-                            elemType="User" refreshFunction={this.refreshUsers} label="Remove Users: " elems={[
+                            elemType="User" refreshFunction={this.refreshUsers} label="Remove Users: " onClose={() => this.setState({newUserPermissions: []})}
+                            elems={[
                                 <DropdownButton 
                                     handleChange={this.userHandle} items={userList} textColor={textColor} bgColor={backgroundColor}
                                     buttonTextColor={buttonTextColor} handleClick={this.deleteUser} buttonLabel="Delete Selected User"
