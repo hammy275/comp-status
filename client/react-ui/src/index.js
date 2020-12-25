@@ -169,18 +169,21 @@ class SettingManager extends React.Component {
 class DropdownButton extends React.Component {
     /**
      * Props:
-     *  handleChange - Function called when dropdown is changed
      *  items - List of items for dropdown
      *  textColor - Text color
      *  bgColor - Background color
      *  buttonTextColor - Color for button text
-     *  handleClick - Function to call when button is clicked
+     *  handleClick - Function to call when button is clicked. Must accept a string, which is the item in the dropdown.
      *  buttonLabel - Label for button next to dropdown
      */
+    constructor(props) {
+        super(props);
+        this.state = {value: ""}
+    }
     render() {
         let elems = [];
-        elems.push(<Dropdown handleChange={this.props.handleChange} items={this.props.items} textColor={this.props.textColor} bgColor={this.props.bgColor}/>)
-        elems.push(<Button textColor={this.props.buttonTextColor} handleClick={this.props.handleClick} value={this.props.buttonLabel} buttonType="is-danger"/>)
+        elems.push(<Dropdown handleChange={(event) => this.setState({value: event.target.value})} items={this.props.items} textColor={this.props.textColor} bgColor={this.props.bgColor}/>)
+        elems.push(<Button textColor={this.props.buttonTextColor} handleClick={() => this.props.handleClick(this.state.value)} value={this.props.buttonLabel} buttonType="is-danger"/>)
         return(elems);
     }
 }
@@ -257,7 +260,7 @@ class Modal extends React.Component {
             return (
             <div>
                 <div className="modal-background" onClick={this.toggleState} style={{height: "250vh"}}></div>
-                <div className="modal-content" style={{position: "fixed", left: "2%", top:"15%", right: "15%", height: "100vh"}}>
+                <div className="modal-content" style={{position: "fixed", left: "2%", top:"15%", right: "15%"}}>
                     {this.props.elem}
                 </div>
                 <button className="modal-close is-large" onClick={this.toggleState}></button>
@@ -286,23 +289,17 @@ class ComputerInfo extends React.Component {
 
         this.getIP = this.getIP.bind(this);
         this.getUsername = this.getUsername.bind(this);
-        this.getPassword = this.getPassword.bind(this);
         this.handleCookieChange = this.handleCookieChange.bind(this);
         this.toggleDarkMode = this.toggleDarkMode.bind(this);
         this.confirmAuth = this.confirmAuth.bind(this);
         this.postWithAuth = this.postWithAuth.bind(this);
         this.endGetComputerData = this.endGetComputerData.bind(this);
-        this.setComputer = this.setComputer.bind(this);
-        this.tempTokenHandle = this.tempTokenHandle.bind(this);
-        this.permaTokenHandle = this.permaTokenHandle.bind(this);
         this.handleTokenRequest = this.handleTokenRequest.bind(this);
         this.refreshTokens = this.refreshTokens.bind(this);
         this.deletePermaToken = this.deletePermaToken.bind(this);
         this.deleteTempToken = this.deleteTempToken.bind(this);
         this.afterTokenDelete = this.afterTokenDelete.bind(this);
-        this.handleUserList = this.handleUserList.bind(this);
         this.refreshUsers = this.refreshUsers.bind(this);
-        this.userHandle = this.userHandle.bind(this);
         this.deleteUser = this.deleteUser.bind(this);
         this.afterUserDelete = this.afterUserDelete.bind(this);
         this.handleNewUserP = this.handleNewUserP.bind(this);
@@ -422,10 +419,6 @@ class ComputerInfo extends React.Component {
         }
     }
 
-    getPassword(password) {
-        this.setState({password: password});
-    }
-
     handleCookieChange() {
         this.setState(function(state) {
             return {useCookies: !state.useCookies}
@@ -446,22 +439,6 @@ class ComputerInfo extends React.Component {
         });
     }
 
-    setComputer(event) {
-        this.setState({selectedComputer: event.target.value});
-    }
-
-    tempTokenHandle(event) {
-        if (event.target.value !== "Select a temporary token...") {
-            this.setState({selectedTempToken: event.target.value});
-        }
-    }
-
-    permaTokenHandle(event) {
-        if (event.target.value !== "Selecte a permanent token...") {
-            this.setState({selectedPermaToken: event.target.value.substr(event.target.value.indexOf(":") + 2)});
-        }
-    }
-
     handleTokenRequest(returned) {
         let permaTokensList = [];
         // eslint-disable-next-line
@@ -471,10 +448,6 @@ class ComputerInfo extends React.Component {
             }
         }
         this.setState({permaTokens: permaTokensList, tempTokens: Object.keys(returned["temp_tokens"])});
-    }
-
-    handleUserList(returned) {
-        this.setState({userList: Object.keys(returned["users"])});
     }
 
     refreshTokens() {
@@ -499,28 +472,25 @@ class ComputerInfo extends React.Component {
         this.setState({statusHeroType: "is-success", statusInfo: returned["message"], selectedUser: null, userList: removeFromArray(this.state.userList, this.state.selectedUser)});
     }
 
-    deleteTempToken() {
-        this.postWithAuth("https://" + this.state.ip + "/delete_token", {"type": "temp", "token_to_delete": this.state.selectedTempToken}, this.afterTokenDelete);
+    deleteTempToken(token) {
+        this.setState({selectedTempToken: token});
+        this.postWithAuth("https://" + this.state.ip + "/delete_token", {"type": "temp", "token_to_delete": token}, this.afterTokenDelete);
     }
 
-    deletePermaToken() {
-        this.postWithAuth("https://" + this.state.ip + "/delete_token", {"type": "perma", "token_to_delete": this.state.selectedPermaToken}, this.afterTokenDelete);
+    deletePermaToken(token) {
+        this.setState({selectedPermaToken: token});
+        this.postWithAuth("https://" + this.state.ip + "/delete_token", {"type": "perma", "token_to_delete": token}, this.afterTokenDelete);
     }
 
-    deleteUser() {
-        if (this.state.selectedUser) {
-            this.postWithAuth("https://" + this.state.ip + "/delete_user", {"user_to_delete": this.state.selectedUser}, this.afterUserDelete);
+    deleteUser(user) {
+        if (user) {
+            this.setState({selectedUser: user});
+            this.postWithAuth("https://" + this.state.ip + "/delete_user", {"user_to_delete": user}, this.afterUserDelete);
         }
     }
 
     refreshUsers() {
-        this.postWithAuth("https://" + this.state.ip + "/list_users", {}, this.handleUserList);
-    }
-
-    userHandle(event) {
-        if (event.target.value !== "Select a user...") {
-            this.setState({selectedUser: event.target.value});
-        }
+        this.postWithAuth("https://" + this.state.ip + "/list_users", {}, (returned) => this.setState({userList: Object.keys(returned["users"])}));
     }
 
     handleNewUserP(permission) {
@@ -638,13 +608,13 @@ class ComputerInfo extends React.Component {
         }
         return (
             <div>
-                <h1 style={{color: textColor}} className="title is-1">Computer Status Information</h1>
+                <h1 style={{color: textColor}} className="title is-1">Computer Status</h1>
                 <br/>
                 <div className="columns">
                     <div className="column is-one-quarter">
                         <InputField value={this.state.ip} bgColor={backgroundColor} textColor={textColor} handleChange={this.getIP} inputText="IP Address: " type="text"/>
                         <InputField value={this.state.username} bgColor={backgroundColor} textColor={textColor} handleChange={this.getUsername} inputText="Username: " type="text"/>
-                        <InputField value={this.state.password} bgColor={backgroundColor} textColor={textColor} handleChange={this.getPassword} inputText="Password: " type="password"/>
+                        <InputField value={this.state.password} bgColor={backgroundColor} textColor={textColor} handleChange={(password) => this.setState({password: password})} inputText="Password: " type="password"/>
                         <br/>
                         <br/>
                         <Button textColor={buttonTextColor} handleClick={this.handleCookieChange} value="Save Information in Cookies" buttonType={this.state.useCookies ? "is-success" : "is-danger"}/>
@@ -653,7 +623,7 @@ class ComputerInfo extends React.Component {
                         <Button textColor={buttonTextColor} handleClick={this.toggleDarkMode} value="Toggle Dark Mode" buttonType="is-info"/>
                         <br/>
                         <br/>
-                        <Dropdown handleChange={this.setComputer} items={computers} textColor={textColor} bgColor={backgroundColor}/>
+                        <Dropdown handleChange={(event) => this.setState({selectedComputer: event.target.value})} items={computers} textColor={textColor} bgColor={backgroundColor}/>
                         <br/>
                         <br/>
                         <SmallHero isVisible={true} textColor={buttonTextColor} heroType={this.state.statusHeroType} text={this.state.statusInfo}/>
@@ -676,11 +646,11 @@ class ComputerInfo extends React.Component {
                             showLabel="Show Token Manager" hasPermission={canToken} textColor={textColor} bgColor={backgroundColor} buttonTextColor={buttonTextColor}
                             elemType="Token" refreshFunction={this.refreshTokens} elems={[
                                 <DropdownButton 
-                                    handleChange={this.tempTokenHandle} items={tempTokens} textColor={textColor} bgColor={backgroundColor} buttonTextColor={buttonTextColor}
+                                    items={tempTokens} textColor={textColor} bgColor={backgroundColor} buttonTextColor={buttonTextColor}
                                     handleClick={this.deleteTempToken} buttonLabel="Delete Selected Temporary Token"
                                 />,
                                 <DropdownButton 
-                                    handleChange={this.permaTokenHandle} items={permaTokens} textColor={textColor} bgColor={backgroundColor} buttonTextColor={buttonTextColor}
+                                    items={permaTokens} textColor={textColor} bgColor={backgroundColor} buttonTextColor={buttonTextColor}
                                     handleClick={this.deletePermaToken} buttonLabel="Delete Selected Permanent Token"
                                 />
                             ]}
@@ -696,7 +666,7 @@ class ComputerInfo extends React.Component {
                             elemType="User" refreshFunction={this.refreshUsers} label="Remove Users: " onClose={() => this.setState({newUserPermissions: []})}
                             elems={[
                                 <DropdownButton 
-                                    handleChange={this.userHandle} items={userList} textColor={textColor} bgColor={backgroundColor}
+                                    items={userList} textColor={textColor} bgColor={backgroundColor}
                                     buttonTextColor={buttonTextColor} handleClick={this.deleteUser} buttonLabel="Delete Selected User"
                                 />, <br/>, <br/>, <br/>,
                                 <label className="label" style={{color: textColor}}>Add Users:</label>,
