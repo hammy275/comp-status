@@ -119,6 +119,12 @@ def after_request(response):
 def give_data():
     data = request.get_json()
     if auth.check_permission(data["token"], "client_user"):
+        to_del = []
+        for pc in db.keys():
+            if time.time() - db[pc]["time"] >= 60*60*24:  # Expire computers after 1 day
+                to_del.append(pc)
+        for pc in to_del:
+            del db[pc]
         return jsonify({"message": "Data successfully received!", "data" : db})
     else:
         return jsonify({"message": "No permission!"}), 401

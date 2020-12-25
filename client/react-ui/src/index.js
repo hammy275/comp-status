@@ -584,7 +584,7 @@ class ComputerInfo extends React.Component {
         let userList = ["Select a user..."]
         if (this.state.haveGoodData) {
             computers = computers.concat(Object.keys(this.state.computerData));
-            if (this.state.selectedComputer && this.state.selectedComputer !== "Select a computer...") {
+            if (this.state.selectedComputer && this.state.selectedComputer !== "Select a computer..." && computers.includes(this.state.selectedComputer)) {
                 let cd = this.state.computerData[this.state.selectedComputer];
                 let memUsage = (cd["used_memory"] / cd["current_memory"] * 100).toFixed(1);
                 if (memUsage >= 70 && memUsage < 90) {
