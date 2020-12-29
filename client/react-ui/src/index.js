@@ -579,12 +579,20 @@ class ComputerInfo extends React.Component {
                 }   
                 pcInfo = this.state.selectedComputer;
                 showStatuses = true;
-                cpuTemps = cd["cpu_temps"].split(",").join("°C, ") + "°C";
+                if (cd["cpu_temps"][0]) {
+                    cpuTemps = cd["cpu_temps"].split(",").join("°C, ") + "°C";
+                    cpuTemps = `Individual CPU Temperatures: ${cpuTemps}`;
+                } else {
+                    cpuTemps = null;
+                }
+                if (cd["cpu_pack_temp"]) {
+                    cpuInfo = `CPU Stats: ${cd["cpu_usage"]}% Usage at ${cd["cpu_pack_temp"]}°C`;
+                } else {
+                    cpuInfo = `CPU Stats: ${cd["cpu_usage"]}% Usage`;
+                }
                 cpuUsages = cd["cpu_usages"].split(",").join("%, ") + "%";
                 ramInfo = `Memory: ${cd["used_memory"]} GB/${cd["current_memory"]} GB (${memUsage}% usage)`;
-                cpuInfo = `CPU Stats: ${cd["cpu_usage"]}% Usage at ${cd["cpu_pack_temp"]}°C`;
                 turboInfo = `Turbo: ${cd["current_turbo"]} GHz/${cd["max_turbo"]} GHz`;
-                cpuTemps = `Individual CPU Temperatures: ${cpuTemps}`;
                 cpuUsages = `Individual CPU Usages: ${cpuUsages}`;
                 let timeDiff = Math.floor(Date.now() / 1000) - cd["time"];
                 if (timeDiff <= 9) {
@@ -634,7 +642,7 @@ class ComputerInfo extends React.Component {
                         <SmallHero isVisible={showStatuses} textColor={buttonTextColor} heroType={ramHeroType} text={ramInfo}/>
                         <SmallHero isVisible={showStatuses} textColor={buttonTextColor} heroType={cpuHeroType} text={cpuInfo}/>
                         <SmallHero isVisible={showStatuses} textColor={buttonTextColor} heroType="is-success" text={turboInfo}/>
-                        <SmallHero isVisible={showStatuses} textColor={buttonTextColor} heroType={cpuTempHeroType} text={cpuTemps}/>
+                        <SmallHero isVisible={showStatuses && cpuTemps !== null} textColor={buttonTextColor} heroType={cpuTempHeroType} text={cpuTemps}/>
                         <SmallHero isVisible={showStatuses} textColor={buttonTextColor} heroType={cpuUsageHeroType} text={cpuUsages}/>
                     </div>
                 </div>

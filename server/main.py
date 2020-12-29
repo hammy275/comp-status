@@ -164,11 +164,19 @@ def main_loop():
         current_turbo = int(psutil.cpu_freq()[0])
         max_turbo = int(psutil.cpu_freq()[2])
         cpu_temps = []
-        for i in psutil.sensors_temperatures()["coretemp"]:
-            cpu_temps.append(str(i[1]))
-        temps = len(cpu_temps)
-        cpu_pack_temp = cpu_temps[0]
-        cpu_temps = ",".join(cpu_temps[1:])
+        try:
+            for i in psutil.sensors_temperatures()["coretemp"]:
+                cpu_temps.append(str(i[1]))
+        except AttributeError:
+            pass
+        if cpu_temps:
+            temps = len(cpu_temps)
+            cpu_pack_temp = cpu_temps[0]
+            cpu_temps = ",".join(cpu_temps[1:])
+        else:
+            temps = cpus / 2
+            cpu_pack_temp = ""
+            cpu_temps = [""]
 
         try:
             post_with_auth("https://{}/take_data".format(settings["ip"]), {
