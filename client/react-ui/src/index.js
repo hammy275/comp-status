@@ -441,13 +441,19 @@ class ComputerInfo extends React.Component {
 
     handleTokenRequest(returned) {
         let permaTokensList = [];
+        let tempTokensList = [];
         // eslint-disable-next-line
+        console.log(returned)
         for (const [key, value] of Object.entries(returned["perma_tokens"])) {
             for (let i = 0; i < value.length; i++) {
                 permaTokensList = permaTokensList.concat(key + ": " + value[i]);
             }
         }
-        this.setState({permaTokens: permaTokensList, tempTokens: Object.keys(returned["temp_tokens"])});
+        // eslint-disable-next-line
+        for (const [key, value] of Object.entries(returned["temp_tokens"])) {
+            tempTokensList = tempTokensList.concat(value["user"] + ": " + key);
+        }
+        this.setState({permaTokens: permaTokensList, tempTokens: tempTokensList});
     }
 
     refreshTokens() {
@@ -474,12 +480,12 @@ class ComputerInfo extends React.Component {
 
     deleteTempToken(token) {
         this.setState({selectedTempToken: token});
-        this.postWithAuth("https://" + this.state.ip + "/delete_token", {"type": "temp", "token_to_delete": token}, this.afterTokenDelete);
+        this.postWithAuth("https://" + this.state.ip + "/delete_token", {"type": "temp", "token_to_delete": token.split(": ")[1]}, this.afterTokenDelete);
     }
 
     deletePermaToken(token) {
         this.setState({selectedPermaToken: token});
-        this.postWithAuth("https://" + this.state.ip + "/delete_token", {"type": "perma", "token_to_delete": token}, this.afterTokenDelete);
+        this.postWithAuth("https://" + this.state.ip + "/delete_token", {"type": "perma", "token_to_delete": token.split(": ")[1]}, this.afterTokenDelete);
     }
 
     deleteUser(user) {
