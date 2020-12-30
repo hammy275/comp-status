@@ -443,7 +443,6 @@ class ComputerInfo extends React.Component {
         let permaTokensList = [];
         let tempTokensList = [];
         // eslint-disable-next-line
-        console.log(returned)
         for (const [key, value] of Object.entries(returned["perma_tokens"])) {
             for (let i = 0; i < value.length; i++) {
                 permaTokensList = permaTokensList.concat(key + ": " + value[i]);
