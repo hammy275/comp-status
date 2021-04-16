@@ -2,7 +2,7 @@
 
 license = """
     comp-status: A small set of Python files to get the status of computers
-    Copyright (C) 2020  hammy3502
+    Copyright (C) 2021  hammy3502
 
     This program is free software: you can redistribute it and/or modify
     it under the terms of the GNU General Public License as published by
@@ -163,6 +163,9 @@ def main_loop():
         cpu_usages = ",".join(cpu_usages)
         current_turbo = int(psutil.cpu_freq()[0])
         max_turbo = int(psutil.cpu_freq()[2])
+        if sys.platform == "win32":
+            current_turbo = None
+            max_turbo = None  # Don't send turbo info if we're on Windows (turbo info broken there)
         cpu_temps = []
         try:
             for i in psutil.sensors_temperatures()["coretemp"]:

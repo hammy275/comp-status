@@ -598,6 +598,9 @@ class ComputerInfo extends React.Component {
                 cpuUsages = cd["cpu_usages"].split(",").join("%, ") + "%";
                 ramInfo = `Memory: ${cd["used_memory"]} GB/${cd["current_memory"]} GB (${memUsage}% usage)`;
                 turboInfo = `Turbo: ${cd["current_turbo"]} GHz/${cd["max_turbo"]} GHz`;
+                if (cd["current_turbo"] === null) {
+                    turboInfo = null;
+                }
                 cpuUsages = `Individual CPU Usages: ${cpuUsages}`;
                 let timeDiff = Math.floor(Date.now() / 1000) - cd["time"];
                 if (timeDiff <= 9) {
@@ -646,7 +649,7 @@ class ComputerInfo extends React.Component {
                         <SmallHero isVisible={showStatuses} textColor={buttonTextColor} heroType={pcHeroType} text={pcInfo}/>
                         <SmallHero isVisible={showStatuses} textColor={buttonTextColor} heroType={ramHeroType} text={ramInfo}/>
                         <SmallHero isVisible={showStatuses} textColor={buttonTextColor} heroType={cpuHeroType} text={cpuInfo}/>
-                        <SmallHero isVisible={showStatuses} textColor={buttonTextColor} heroType="is-success" text={turboInfo}/>
+                        <SmallHero isVisible={showStatuses && turboInfo !== null} textColor={buttonTextColor} heroType="is-success" text={turboInfo}/>
                         <SmallHero isVisible={showStatuses && cpuTemps !== null} textColor={buttonTextColor} heroType={cpuTempHeroType} text={cpuTemps}/>
                         <SmallHero isVisible={showStatuses} textColor={buttonTextColor} heroType={cpuUsageHeroType} text={cpuUsages}/>
                     </div>
