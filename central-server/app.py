@@ -86,6 +86,7 @@ def auth_request():
     if request.method == "GET":
         return
     elif request.method == "OPTIONS":
+        # Returns 200 so Chrome's console doesn't spam.
         return jsonify({"message": "OPTIONS requests are ignored by this server!"}), 200
     data = request.get_json()
     try:
@@ -192,9 +193,9 @@ def delete_token():
     if auth.check_permission(data["token"], "revoke_tokens"):
         try:
             if data["type"] == "perma":
-                return jsonify(auth.delete_perma_token(data["token_to_delete"]))
+                return auth.delete_perma_token(data["token_to_delete"])
             elif data["type"] == "temp":
-                return jsonify(auth.delete_temp_token(data["token_to_delete"]))
+                return auth.delete_temp_token(data["token_to_delete"])
             else:
                 return jsonify({"message": "Token type to delete not specified!"}), 422
         except KeyError:

@@ -17,11 +17,11 @@
 """
 
 import time
-import string
-from secrets import choice, token_urlsafe
+from secrets import token_urlsafe
 import json
 import sys
 import bcrypt
+from flask import jsonify
 
 try:
     with open("db.json") as f:
@@ -94,7 +94,7 @@ def delete_perma_token(token):
         token (str): Token to delete
 
     Returns:
-        dict: A dict reflecting the status of the deletion.
+        json, int: JSON reflecting the status of the deletion and an associated HTTP error code.
 
     """
     try:
@@ -104,10 +104,10 @@ def delete_perma_token(token):
                 new_tokens.remove(token)
                 users[user]["tokens"] = new_tokens
                 write_db()
-                return {"message": "Perma-token deleted successfully!"}
-        return {"message": "Specified token not found!"}
+                return jsonify({"message": "Perma-token deleted successfully!"}), 200
+        return jsonify({"message": "Specified token not found!"}), 400
     except (ValueError, KeyError):
-        return {"message": "Specified token not found!"}
+        return jsonify({"message": "Specified token not found!"}), 400
 
 
 def delete_temp_token(token):
@@ -117,14 +117,14 @@ def delete_temp_token(token):
         token (str): The token to delete
 
     Returns:
-        dict: A dict to be parsed into JSON to return to clients
+        json, int: JSON and a HTTP return code to be returned to clients.
 
     """
     try:
         del tokens[token]
-        return {"message": "Temp-token deleted successfully!"}
+        return jsonify({"message": "Temp-token deleted successfully!"}), 200
     except KeyError:
-        return {"message": "Token does not exist!"}
+        return jsonify({"message": "Token does not exist!"}), 400
 
 
 def auth_token(token):
@@ -145,7 +145,7 @@ def auth_token(token):
         else:
             return {"message": "Token expired!"}
     except KeyError:
-        return {"message": "Unauthorized!"} 
+        return {"message": "Unauthorized!"}
 
 
 def get_perma_token(user, password):
@@ -159,23 +159,23 @@ def get_perma_token(user, password):
         password (str): Client supplied password
 
     Returns:
-        dict: A generated token or unauthorized.
+        json, int: A message parameter in json and an int representing a HTTP status code.
 
     """
     time.sleep(1)
     try:
         if bcrypt.checkpw(password.encode('utf-8'), users[user]["password"].encode("utf-8")):
             try:
-                return {"message": "Generated perma-token!", "token": users[user]["tokens"][0]}
+                return jsonify({"message": "Generated perma-token!", "token": users[user]["tokens"][0]}), 200
             except (IndexError, KeyError):
                 perma_token = gen_token()
                 users[user]["tokens"] = [perma_token]
                 write_db()
-                return {"message": "Generated perma-token!", "token": perma_token}
+                return jsonify({"message": "Generated perma-token!", "token": perma_token}), 200
         else:
-            return {"message": "Unauthorized!"} 
+            return jsonify({"message": "Unauthorized!"}), 401
     except KeyError:
-        return {"message": "Unauthorized!"}
+        return jsonify({"message": "Unauthorized!"}), 401
 
 
 def get_temp_token(user, perma_token):
@@ -186,7 +186,7 @@ def get_temp_token(user, perma_token):
         perma_token (str): A valid perma-token
 
     Returns:
-        dict: A generated token or unauthorized
+        JSON, int: A JSON message, followed by an int representing an HTTP status code
 
     """
     time.sleep(0.5)
@@ -194,22 +194,22 @@ def get_temp_token(user, perma_token):
         if perma_token in users[user]["tokens"]:
             token = gen_token()
             tokens[token] = {"time": time.time(), "user": user, "permissions": users[user]["permissions"]}
-            return {"message": "Generated temporary-token!", "token": token, "permissions": users[user]["permissions"]}
+            return jsonify({"message": "Generated temporary-token!", "token": token, "permissions": users[user]["permissions"]}), 200
         else:
-            return {"message": "Unauthorized!"}
+            return jsonify({"message": "Unauthorized!"}), 401
     except KeyError:
-        return {"message": "Unauthorized!"}
+        return jsonify({"message": "Unauthorized!"}), 401
 
 
 def delete_user(user):
     del db["users"][user]
     write_db()
-    return {"message": "Successfully deleted user!"}
+    return jsonify({"message": "Successfully deleted user!"}), 200
 
 
 def add_user(user, password, permissions):
     if user.lower() in db["users"]:
-        return {"message": "User already exists!"}
+        return jsonify({"message": "User already exists!"}), 400
     db["users"][user.lower()] = {"password": bcrypt.hashpw(password.encode('utf-8'), bcrypt.gensalt()).decode("utf-8"), "permissions": permissions}
     write_db()
-    return {"message": "User successfully added!"}
+    return jsonify({"message": "User successfully added!"}), 200

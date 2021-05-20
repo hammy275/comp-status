@@ -27,7 +27,9 @@ def get_config(key):
         elif key == "version":
             return config_version
         elif key == "domain":
-            return example.com
+            return "example.com"
+        elif key == "use_cors":
+            return True
 
 
 def upgrade_db():
@@ -117,16 +119,16 @@ def settings_manager():
             else:
                 db["use_cors"] = False
 
+
 def user_manager():
     opt = ""
     while opt != "0" and opt.lower() != "e":
         opt = get_input("1 - Add User\n2 - Edit/List User(s)\n3 - Change Password of User\n0/e - Exit\n", ["1", "2", "3", "0", "e", "E"])
         if opt == "1":
             user = input("Enter Username: ")
-            try:
-                db["users"][user]
+            if user in db["users"]:
                 print("Username is already taken!")
-            except KeyError:
+            else:
                 password = getpass.getpass("Enter Password: ")
                 pass_two = getpass.getpass("Confirm Password: ")
                 if password != pass_two:
