@@ -1,0 +1,14 @@
+FROM nikolaik/python-nodejs:python3.8-nodejs16
+
+WORKDIR /app
+
+COPY central-server/requirements.txt requirements.txt
+RUN pip3 install -r requirements.txt
+
+COPY . .
+
+WORKDIR /app/client/react-ui
+RUN ["npm", "run", "build"]
+
+WORKDIR /app/central-server
+CMD ["python3", "app.py"]
