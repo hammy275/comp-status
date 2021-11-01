@@ -30,13 +30,14 @@ class Modal extends React.Component {
         if (this.state.show) {
             window.scrollTo(0, 0);
             return (
-            <div>
+            <>
                 <div className="modal-background" onClick={this.toggleState} style={{height: "250vh"}}></div>
                 <div className="modal-content" style={{position: "fixed", left: "2%", top:"15%", right: "15%"}}>
                     {this.props.elem}
                 </div>
                 <button className="modal-close is-large" onClick={this.toggleState}></button>
-            </div>);
+            </>
+            );
         } else {
             return <Button textColor={this.props.buttonTextColor} handleClick={this.toggleState} value={this.props.label} buttonType="is-info"/>
         }

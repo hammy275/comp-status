@@ -18,10 +18,12 @@ class DropdownButton extends React.Component {
         this.state = {value: ""}
     }
     render() {
-        let elems = [];
-        elems.push(<Dropdown handleChange={(event) => this.setState({value: event.target.value})} items={this.props.items} textColor={this.props.textColor} bgColor={this.props.bgColor}/>)
-        elems.push(<Button textColor={this.props.buttonTextColor} handleClick={() => this.props.handleClick(this.state.value)} value={this.props.buttonLabel} buttonType="is-danger"/>)
-        return(elems);
+        return (
+            <>
+                <Dropdown handleChange={(event) => this.setState({value: event.target.value})} items={this.props.items} textColor={this.props.textColor} bgColor={this.props.bgColor}/>
+                <Button textColor={this.props.buttonTextColor} handleClick={() => this.props.handleClick(this.state.value)} value={this.props.buttonLabel} buttonType="is-danger"/>
+            </>
+        );
     }
 }
 

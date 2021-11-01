@@ -8,7 +8,7 @@ export default function Dropdown(props) {
             {items.map((item) =>
             <option key={item}>{item}</option>
             )}
-        </select>
+            </select>
         </span>
     );
 }

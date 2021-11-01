@@ -19,10 +19,12 @@ class InputButton extends React.Component {
         this.state = {value: ""};
     }
     render() {
-        let elems = [];
-        elems.push(<InputField value={this.state["value"]} textColor={this.props.textColor} bgColor={this.props.bgColor} inputText={this.props.label} type={this.props.type} handleChange={(value) => this.setState({value: value})}/>);
-        elems.push(<Button textColor={this.props.buttonTextColor} handleClick={() => this.props.handleClick(this.state["value"])} value={this.props.buttonLabel} buttonType="is-success"/>);
-        return(elems);
+        return (
+            <>
+                <InputField value={this.state["value"]} textColor={this.props.textColor} bgColor={this.props.bgColor} inputText={this.props.label} type={this.props.type} handleChange={(value) => this.setState({value: value})}/>
+                <Button textColor={this.props.buttonTextColor} handleClick={() => this.props.handleClick(this.state["value"])} value={this.props.buttonLabel} buttonType="is-success"/>
+            </>
+        );
     }
 }
 
