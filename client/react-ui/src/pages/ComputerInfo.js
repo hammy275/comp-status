@@ -1,5 +1,7 @@
 import React from "react";
 
+import axios from "axios";
+
 import Button from "../components/Button";
 import CheckboxLabel from "../components/CheckboxLabel";
 import Dropdown from "../components/Dropdown";
@@ -31,51 +33,28 @@ class ComputerInfo extends React.Component {
         this.getUsername = this.getUsername.bind(this);
         this.handleCookieChange = this.handleCookieChange.bind(this);
         this.toggleDarkMode = this.toggleDarkMode.bind(this);
-        this.confirmAuth = this.confirmAuth.bind(this);
+        this.checkAuth = this.checkAuth.bind(this);
         this.postWithAuth = this.postWithAuth.bind(this);
-        this.endGetComputerData = this.endGetComputerData.bind(this);
-        this.handleTokenRequest = this.handleTokenRequest.bind(this);
         this.refreshTokens = this.refreshTokens.bind(this);
         this.deletePermaToken = this.deletePermaToken.bind(this);
         this.deleteTempToken = this.deleteTempToken.bind(this);
         this.afterTokenDelete = this.afterTokenDelete.bind(this);
         this.refreshUsers = this.refreshUsers.bind(this);
         this.deleteUser = this.deleteUser.bind(this);
-        this.afterUserDelete = this.afterUserDelete.bind(this);
         this.handleNewUserP = this.handleNewUserP.bind(this);
         this.addUser = this.addUser.bind(this);
-        this.handleAddUser = this.handleAddUser.bind(this);
 
-        this.postWithAuth("https://" + this.state.ip + "/give_data", {}, this.endGetComputerData);
+        this.componentDidMount();
     }
 
     componentDidMount() {
-        setInterval(() => this.postWithAuth("https://" + this.state.ip + "/give_data", {}, this.endGetComputerData), 5000);
+        setInterval(async () => {
+            const data = await this.postWithAuth("https://" + this.state.ip + "/give_data", {});
+            this.setState({computerData: data.data, haveGoodData: true});
+        }, 5000);
     }
 
-    httpPost(url, data) {
-        // Get ready to send HTTP POST request, and define a function to run when sent.
-        return new Promise(function (resolve) {
-            let xhr = new XMLHttpRequest();
-            xhr.open("POST", url, true);
-            xhr.setRequestHeader("Content-Type", "application/json");
-            xhr.onreadystatechange = function () { // Call a function when the state changes.
-                if (this.readyState === XMLHttpRequest.DONE ) {
-                    if (this.status === 200 || this.status === 401) {
-                        let returned = JSON.parse(xhr.response);
-                        returned["error"] = this.status;
-                        resolve(returned);
-                    } else {
-                        resolve({"error": this.status, "message": "Error while contacting provided address! " +
-                                "Maybe the server is down, or your browser doesn't trust the cert!"})
-                    }
-                }
-            };
-            xhr.send(JSON.stringify(data));
-        })
-    }
-
-    confirmAuth(returned, url, data, endFunction) {
+    checkAuth(returned) {
         if (returned["message"] === "Generated perma-token!") {
             this.setState({permaToken: returned["token"], statusHeroType: "is-info", statusInfo: "Authenticating..."});
             if (this.state.useCookies) {
@@ -83,7 +62,7 @@ class ComputerInfo extends React.Component {
                 setCookie("ipAddress", this.state.ip, 1000*60*60*24*36500);
                 setCookie("username", this.state.username, 1000*60*60*24*36500);
             }
-            this.postWithAuth(url, data, endFunction);
+            return "retry";
         } else if (returned["message"] === "Generated temporary-token!") {
             this.setState({token: returned["token"], permissions: returned["permissions"], statusHeroType: "is-info", statusInfo: "Fetching Data..."});
             if (this.state.useCookies) {
@@ -91,10 +70,10 @@ class ComputerInfo extends React.Component {
                 setCookie("canToken", this.state.permissions.includes("revoke_tokens").toString());
                 setCookie("canManageUsers", this.state.permissions.includes("manage_users").toString());
             }
-            this.postWithAuth(url, data, endFunction)
+            return "retry";
         } else if (returned["message"].includes("uccess")) {
             this.setState({haveGoodData: true, statusHeroType: "is-success", statusInfo: returned["message"], failCount: 0});
-            endFunction(returned);
+            return "success";
         } else if (returned["message"].includes("Unauthorized")) {
             this.setState({token: null, haveGoodData: false});
             this.setState((state, props) => ({failCount: state.failCount + 1}));
@@ -104,58 +83,57 @@ class ComputerInfo extends React.Component {
             if (this.state.failCount >= 3) {
                 this.setState({permaToken: null, failCount: 0});
             }
+            return "fail";
         } else if (returned["message"] === "No permission!") {
             this.setState({token: null, permaToken: null, statusInfo: "User account does not have permission to perform the requested action!", statusHeroType: "is-danger"});
             delCookie("token");
             delCookie("permaToken");
+            return "fail";
         } else if (returned["error"] !== 200) {
             this.setState({haveGoodData: false, statusHeroType: "is-danger", token: null,
             statusInfo: "Error while contacting provided address! Maybe the server is down, or your browser doesn't trust the cert!"
         });
+            return "fail";
         } else if (returned["message"] === "Token expired!") {
             this.setState({token: null});
             delCookie("token");
-            this.postWithAuth(url, data, endFunction);
+            return "retry";
         } else if (returned["message"] && returned["error"] === 200) {
-            endFunction(returned);
-        } 
+            return "success";
+        }
+        return null;
     }
     
-    postWithAuth(url, data, endFunction) {
+    async postWithAuth(url, data) {
+        let authData;
         if (!this.state.permaToken) {
-            let authData = {"user": this.state.username, "password": this.state.password, "auth": "password"};
-            this.httpPost(url, authData).then(
-                value => {this.confirmAuth(value, url, data, endFunction)}
-            );
+            authData = {"user": this.state.username, "password": this.state.password, "auth": "password"};
         } else if (!this.state.token) {
-            let authData = {"user": this.state.username, "token": this.state.permaToken, "auth": "perma_token"};
-            this.httpPost(url, authData).then(
-                value => {this.confirmAuth(value, url, data, endFunction)}
-            );
+            authData = {"user": this.state.username, "token": this.state.permaToken, "auth": "perma_token"};
         }
         else {
-            let authData = {"token": this.state.token, "auth": "temp_token"};
-            this.httpPost(url, Object.assign({}, authData, data)).then(
-                value => {this.confirmAuth(value, url, data, endFunction)}
-            );
+            authData = {"token": this.state.token, "auth": "temp_token"};
+        }
+        let resp, status;
+        while (!status || status === "retry") {
+            resp = await axios.post(url, authData);
+            status = this.checkAuth(resp.data, url, data);
+        }
+        if (status === "success") return resp.data;
+        return null;
+    }
+
+    getIP(event) {
+        this.setState({ip: event.target.value});
+        if (this.state.useCookies) {
+            setCookie("ipAddress", event.target.value, 1000*60*60*24*30);
         }
     }
 
-    endGetComputerData(returned) {
-        this.setState({computerData: returned["data"], haveGoodData: true});
-    }
-
-    getIP(ip) {
-        this.setState({ip: ip});
+    getUsername(event) {
+        this.setState({username: event.target.value});
         if (this.state.useCookies) {
-            setCookie("ipAddress", ip, 1000*60*60*24*30);
-        }
-    }
-
-    getUsername(username) {
-        this.setState({username: username});
-        if (this.state.useCookies) {
-            setCookie("username", username, 1000*60*60*24*30);
+            setCookie("username", event.target.value, 1000*60*60*24*30);
         }
     }
 
@@ -179,7 +157,10 @@ class ComputerInfo extends React.Component {
         });
     }
 
-    handleTokenRequest(returned) {
+
+    async refreshTokens() {
+        const returned = await this.postWithAuth("https://" + this.state.ip + "/get_tokens", {});
+        if (returned === null) return;
         let permaTokensList = [];
         let tempTokensList = [];
         // eslint-disable-next-line
@@ -195,11 +176,8 @@ class ComputerInfo extends React.Component {
         this.setState({permaTokens: permaTokensList, tempTokens: tempTokensList});
     }
 
-    refreshTokens() {
-        this.postWithAuth("https://" + this.state.ip + "/get_tokens", {}, this.handleTokenRequest);
-    }
-
     afterTokenDelete(returned) {
+        if (returned === null) return;
         let heroType = "is-success";
         if (returned["message"] !== "Perma-token deleted successfully!" && returned["message"] !== "Temp-token deleted successfully!") {
             heroType = "is-danger";
@@ -213,29 +191,31 @@ class ComputerInfo extends React.Component {
         this.setState({statusInfo: returned["message"], statusHeroType: heroType});
     }
 
-    afterUserDelete(returned) {
-        this.setState({statusHeroType: "is-success", statusInfo: returned["message"], selectedUser: null, userList: removeFromArray(this.state.userList, this.state.selectedUser)});
-    }
-
-    deleteTempToken(token) {
+    async deleteTempToken(token) {
         this.setState({selectedTempToken: token});
-        this.postWithAuth("https://" + this.state.ip + "/delete_token", {"type": "temp", "token_to_delete": token.split(": ")[1]}, this.afterTokenDelete);
+        const resp = await this.postWithAuth("https://" + this.state.ip + "/delete_token", {"type": "temp", "token_to_delete": token.split(": ")[1]});
+        this.afterTokenDelete(resp);
     }
 
-    deletePermaToken(token) {
+    async deletePermaToken(token) {
         this.setState({selectedPermaToken: token});
-        this.postWithAuth("https://" + this.state.ip + "/delete_token", {"type": "perma", "token_to_delete": token.split(": ")[1]}, this.afterTokenDelete);
+        const resp = await this.postWithAuth("https://" + this.state.ip + "/delete_token", {"type": "perma", "token_to_delete": token.split(": ")[1]});
+        this.afterTokenDelete(resp);
     }
 
-    deleteUser(user) {
+    async deleteUser(user) {
         if (user) {
             this.setState({selectedUser: user});
-            this.postWithAuth("https://" + this.state.ip + "/delete_user", {"user_to_delete": user}, this.afterUserDelete);
+            const returned = await this.postWithAuth("https://" + this.state.ip + "/delete_user", {"user_to_delete": user});
+            if (returned === null) return;
+            this.setState({statusHeroType: "is-success", statusInfo: returned["message"], selectedUser: null, userList: removeFromArray(this.state.userList, this.state.selectedUser)});
         }
     }
 
-    refreshUsers() {
-        this.postWithAuth("https://" + this.state.ip + "/list_users", {}, (returned) => this.setState({userList: Object.keys(returned["users"])}));
+    async refreshUsers() {
+        const returned = await this.postWithAuth("https://" + this.state.ip + "/list_users", {});
+        if (returned === null) return;
+        this.setState({userList: Object.keys(returned["users"])});
     }
 
     handleNewUserP(permission) {
@@ -248,11 +228,9 @@ class ComputerInfo extends React.Component {
         this.setState({newUserPermissions: perms});
     }
 
-    addUser(new_user) {
-        this.postWithAuth("https://" + this.state.ip + "/add_user", {"user_to_add": new_user, "password_of_user": this.state["newUserPassword"], permissions: this.state["newUserPermissions"]}, this.handleAddUser);
-    }
-
-    handleAddUser(returned) {
+    async addUser(new_user) {
+        const returned = await this.postWithAuth("https://" + this.state.ip + "/add_user", {"user_to_add": new_user, "password_of_user": this.state["newUserPassword"], permissions: this.state["newUserPermissions"]});
+        if (returned === null) return;
         let heroType = "is-danger";
         if (returned["message"] === "User successfully added!") {
             heroType = "is-success"
@@ -370,7 +348,7 @@ class ComputerInfo extends React.Component {
                     <div className="column is-one-quarter">
                         <InputField value={this.state.ip} bgColor={backgroundColor} textColor={textColor} handleChange={this.getIP} inputText="IP Address: " type="text"/>
                         <InputField value={this.state.username} bgColor={backgroundColor} textColor={textColor} handleChange={this.getUsername} inputText="Username: " type="text"/>
-                        <InputField value={this.state.password} bgColor={backgroundColor} textColor={textColor} handleChange={(password) => this.setState({password: password})} inputText="Password: " type="password"/>
+                        <InputField value={this.state.password} bgColor={backgroundColor} textColor={textColor} handleChange={(event) => this.setState({password: event.target.value})} inputText="Password: " type="password"/>
                         <br/>
                         <br/>
                         <Button textColor={buttonTextColor} handleClick={this.handleCookieChange} value="Save Information in Cookies" buttonType={this.state.useCookies ? "is-success" : "is-danger"}/>
