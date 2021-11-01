@@ -21,7 +21,7 @@ class InputButton extends React.Component {
     render() {
         return (
             <>
-                <InputField value={this.state["value"]} textColor={this.props.textColor} bgColor={this.props.bgColor} inputText={this.props.label} type={this.props.type} handleChange={(value) => this.setState({value: value})}/>
+                <InputField value={this.state["value"]} textColor={this.props.textColor} bgColor={this.props.bgColor} inputText={this.props.label} type={this.props.type} handleChange={(event) => this.setState({value: event.target.value})}/>
                 <Button textColor={this.props.buttonTextColor} handleClick={() => this.props.handleClick(this.state["value"])} value={this.props.buttonLabel} buttonType="is-success"/>
             </>
         );

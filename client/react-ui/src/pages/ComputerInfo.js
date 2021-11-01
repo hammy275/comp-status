@@ -1,262 +1,58 @@
 import React from "react";
-
-import axios from "axios";
+import { Link } from "react-router-dom";
 
 import Button from "../components/Button";
-import CheckboxLabel from "../components/CheckboxLabel";
 import Dropdown from "../components/Dropdown";
-import DropdownButton from "../components/DropdownButton";
-import InputButton from "../components/InputButton";
 import InputField from "../components/InputField";
-import Modal from "../components/Modal";
-import SettingManager from "../components/SettingManager";
 import SmallHero from "../components/SmallHero";
 
-import { delCookie, removeFromArray, removeFromArrayPartialMatch, readCookie, setCookie } from "../utils/utils";
-
 class ComputerInfo extends React.Component {
+    /**
+     * Props:
+     *  delCookie: Function that handles cookie deletion
+     *  removeFromArray: Function that removes items from an array
+     *  removeFromArrayPartialMatch: Function that removes items from an array with a partial match
+     *  readCookie: Function that reads a cookie's status
+     *  setCookie: Sets a cookie
+     *  postWithAuth: Post with authentication function
+     *  getField: Function for getting the data in a field
+     *  toggleDarkMode: Function to toggle dark mode
+     *  toggleCookies: Function to toggle whether to use cookies
+     * 
+     *  ip: IP address
+     *  username: Username
+     *  password: Password
+     *  useCookies: Whether or not to use cookies
+     *  isDark: If in dark theme
+     *  textColor: Text Color
+     *  buttonTextColor: Button text color
+     *  backgroundColor: Background color
+     */
+
     constructor(props) {
         super(props);
-        let useCookiesFromCookie = readCookie("useCookies") === "true";
-        let isDark = readCookie("isDark") === "true";
-        let ip = readCookie("ipAddress") ? readCookie("ipAddress") : "";
-        let username = readCookie("username") ? readCookie("username") : "";
-        let token = readCookie("token") ? readCookie("token") : "";
-        let permaToken = readCookie("permaToken") ? readCookie("permaToken") : "";
-        this.state = {ip: ip, username: username, password: "", isDark: isDark, useCookies: useCookiesFromCookie, token: token,
-        permaToken: permaToken, computerData: {}, haveGoodData: false, selectedComputer: null, statusInfo: "Waiting for data...",
-        statusHeroType: "is-info", selectedPermaToken: null, selectedTempToken: null, permissions: [],
-        tempTokens: [], permaTokens: [], failCount: 0, userList: [], selectedUser: null, newUserPermissions: [],
-        newUserPassword: ""};
 
-        this.getIP = this.getIP.bind(this);
-        this.getUsername = this.getUsername.bind(this);
-        this.handleCookieChange = this.handleCookieChange.bind(this);
-        this.toggleDarkMode = this.toggleDarkMode.bind(this);
-        this.checkAuth = this.checkAuth.bind(this);
-        this.postWithAuth = this.postWithAuth.bind(this);
-        this.refreshTokens = this.refreshTokens.bind(this);
-        this.deletePermaToken = this.deletePermaToken.bind(this);
-        this.deleteTempToken = this.deleteTempToken.bind(this);
-        this.afterTokenDelete = this.afterTokenDelete.bind(this);
-        this.refreshUsers = this.refreshUsers.bind(this);
-        this.deleteUser = this.deleteUser.bind(this);
-        this.handleNewUserP = this.handleNewUserP.bind(this);
-        this.addUser = this.addUser.bind(this);
+        this.getData = this.getData.bind(this);
 
-        this.componentDidMount();
+        this.state = {computerData: {}, selectedComputer: null};
+        this.getData();
     }
 
     componentDidMount() {
-        setInterval(async () => {
-            const data = await this.postWithAuth("https://" + this.state.ip + "/give_data", {});
-            this.setState({computerData: data.data, haveGoodData: true});
-        }, 5000);
+        setInterval(this.getData, 5000);
     }
 
-    checkAuth(returned) {
-        if (returned["message"] === "Generated perma-token!") {
-            this.setState({permaToken: returned["token"], statusHeroType: "is-info", statusInfo: "Authenticating..."});
-            if (this.state.useCookies) {
-                setCookie("permaToken", this.state.permaToken, 1000*60*60*24*36500);
-                setCookie("ipAddress", this.state.ip, 1000*60*60*24*36500);
-                setCookie("username", this.state.username, 1000*60*60*24*36500);
-            }
-            return "retry";
-        } else if (returned["message"] === "Generated temporary-token!") {
-            this.setState({token: returned["token"], permissions: returned["permissions"], statusHeroType: "is-info", statusInfo: "Fetching Data..."});
-            if (this.state.useCookies) {
-                setCookie("token", this.state.token);
-                setCookie("canToken", this.state.permissions.includes("revoke_tokens").toString());
-                setCookie("canManageUsers", this.state.permissions.includes("manage_users").toString());
-            }
-            return "retry";
-        } else if (returned["message"].includes("uccess")) {
-            this.setState({haveGoodData: true, statusHeroType: "is-success", statusInfo: returned["message"], failCount: 0});
-            return "success";
-        } else if (returned["message"].includes("Unauthorized")) {
-            this.setState({token: null, haveGoodData: false});
-            this.setState((state, props) => ({failCount: state.failCount + 1}));
-            delCookie("token");
-            this.setState({haveGoodData: false, statusHeroType: "is-danger",
-            statusInfo: "Invalid username/password!"});
-            if (this.state.failCount >= 3) {
-                this.setState({permaToken: null, failCount: 0});
-            }
-            return "fail";
-        } else if (returned["message"] === "No permission!") {
-            this.setState({token: null, permaToken: null, statusInfo: "User account does not have permission to perform the requested action!", statusHeroType: "is-danger"});
-            delCookie("token");
-            delCookie("permaToken");
-            return "fail";
-        } else if (returned["error"] !== 200) {
-            this.setState({haveGoodData: false, statusHeroType: "is-danger", token: null,
-            statusInfo: "Error while contacting provided address! Maybe the server is down, or your browser doesn't trust the cert!"
-        });
-            return "fail";
-        } else if (returned["message"] === "Token expired!") {
-            this.setState({token: null});
-            delCookie("token");
-            return "retry";
-        } else if (returned["message"] && returned["error"] === 200) {
-            return "success";
+    async getData() {
+        const data = await this.props.postWithAuth("https://" + this.props.ip + "/give_data", {});
+        if (data === null) {
+            this.setState({haveGoodData: false});
+            return;
         }
-        return null;
-    }
-    
-    async postWithAuth(url, data) {
-        let authData;
-        if (!this.state.permaToken) {
-            authData = {"user": this.state.username, "password": this.state.password, "auth": "password"};
-        } else if (!this.state.token) {
-            authData = {"user": this.state.username, "token": this.state.permaToken, "auth": "perma_token"};
-        }
-        else {
-            authData = {"token": this.state.token, "auth": "temp_token"};
-        }
-        let resp, status;
-        while (!status || status === "retry") {
-            resp = await axios.post(url, authData);
-            status = this.checkAuth(resp.data, url, data);
-        }
-        if (status === "success") return resp.data;
-        return null;
+        this.setState({computerData: data.data, haveGoodData: true});
     }
 
-    getIP(event) {
-        this.setState({ip: event.target.value});
-        if (this.state.useCookies) {
-            setCookie("ipAddress", event.target.value, 1000*60*60*24*30);
-        }
-    }
-
-    getUsername(event) {
-        this.setState({username: event.target.value});
-        if (this.state.useCookies) {
-            setCookie("username", event.target.value, 1000*60*60*24*30);
-        }
-    }
-
-    handleCookieChange() {
-        this.setState(function(state) {
-            return {useCookies: !state.useCookies}
-        });
-        setCookie("useCookies", (!this.state.useCookies).toString(), 1000*60*60*24*36500);
-        if (this.state.useCookies) {
-            delCookie("ipAddress");
-            delCookie("username");
-            delCookie("token");
-            delCookie("permaToken");
-        }
-    }
-
-    toggleDarkMode() {
-        setCookie("isDark", (!this.state.isDark).toString(), 1000 * 60 * 60 * 24 * 36500, true);
-        this.setState(function(state) {
-            return {isDark: !state.isDark}
-        });
-    }
-
-
-    async refreshTokens() {
-        const returned = await this.postWithAuth("https://" + this.state.ip + "/get_tokens", {});
-        if (returned === null) return;
-        let permaTokensList = [];
-        let tempTokensList = [];
-        // eslint-disable-next-line
-        for (const [key, value] of Object.entries(returned["perma_tokens"])) {
-            for (let i = 0; i < value.length; i++) {
-                permaTokensList = permaTokensList.concat(key + ": " + value[i]);
-            }
-        }
-        // eslint-disable-next-line
-        for (const [key, value] of Object.entries(returned["temp_tokens"])) {
-            tempTokensList = tempTokensList.concat(value["user"] + ": " + key);
-        }
-        this.setState({permaTokens: permaTokensList, tempTokens: tempTokensList});
-    }
-
-    afterTokenDelete(returned) {
-        if (returned === null) return;
-        let heroType = "is-success";
-        if (returned["message"] !== "Perma-token deleted successfully!" && returned["message"] !== "Temp-token deleted successfully!") {
-            heroType = "is-danger";
-        } else {
-            if (returned["message"] === "Perma-token deleted successfully!") {
-                this.setState({permaTokens: removeFromArrayPartialMatch(this.state.permaTokens, this.state.selectedPermaToken)});
-            } else {
-                this.setState({tempTokens: removeFromArray(this.state.tempTokens, this.state.selectedTempToken)});
-            }
-        }
-        this.setState({statusInfo: returned["message"], statusHeroType: heroType});
-    }
-
-    async deleteTempToken(token) {
-        this.setState({selectedTempToken: token});
-        const resp = await this.postWithAuth("https://" + this.state.ip + "/delete_token", {"type": "temp", "token_to_delete": token.split(": ")[1]});
-        this.afterTokenDelete(resp);
-    }
-
-    async deletePermaToken(token) {
-        this.setState({selectedPermaToken: token});
-        const resp = await this.postWithAuth("https://" + this.state.ip + "/delete_token", {"type": "perma", "token_to_delete": token.split(": ")[1]});
-        this.afterTokenDelete(resp);
-    }
-
-    async deleteUser(user) {
-        if (user) {
-            this.setState({selectedUser: user});
-            const returned = await this.postWithAuth("https://" + this.state.ip + "/delete_user", {"user_to_delete": user});
-            if (returned === null) return;
-            this.setState({statusHeroType: "is-success", statusInfo: returned["message"], selectedUser: null, userList: removeFromArray(this.state.userList, this.state.selectedUser)});
-        }
-    }
-
-    async refreshUsers() {
-        const returned = await this.postWithAuth("https://" + this.state.ip + "/list_users", {});
-        if (returned === null) return;
-        this.setState({userList: Object.keys(returned["users"])});
-    }
-
-    handleNewUserP(permission) {
-        let perms = this.state["newUserPermissions"];
-        if (perms.includes(permission)) {
-            perms.splice(perms.indexOf(permission), 1);
-        } else {
-            perms.push(permission);
-        }
-        this.setState({newUserPermissions: perms});
-    }
-
-    async addUser(new_user) {
-        const returned = await this.postWithAuth("https://" + this.state.ip + "/add_user", {"user_to_add": new_user, "password_of_user": this.state["newUserPassword"], permissions: this.state["newUserPermissions"]});
-        if (returned === null) return;
-        let heroType = "is-danger";
-        if (returned["message"] === "User successfully added!") {
-            heroType = "is-success"
-        }
-        this.setState({statusInfo: returned["message"], statusHeroType: heroType});
-    }
 
     render() {
-        let textColor;
-        let backgroundColor;
-        let backgroundStyle;
-        let buttonTextColor;
-        if (this.state.isDark) {
-            textColor = "#7f7f7f";
-            backgroundColor = "#363636";
-            backgroundStyle = "has-background-dark";
-            buttonTextColor = backgroundColor;
-        } else {
-            textColor = "#000000";
-            backgroundColor = "#ffffff";
-            backgroundStyle = "has-background-white";
-            buttonTextColor = backgroundColor;
-        }
-        document.body.style.className = backgroundStyle;
-        document.getElementById("html").setAttribute("class", backgroundStyle);
-
         let showStatuses = false;
         let computers = ["Select a computer..."];
         let ramInfo = "";
@@ -270,11 +66,6 @@ class ComputerInfo extends React.Component {
         let cpuHeroType = "is-success";
         let cpuTempHeroType = "is-success";
         let cpuUsageHeroType = "is-success";
-        let canToken = this.state.permissions.includes("revoke_tokens") || readCookie("canToken", "false") === "true";
-        let canManageUsers = this.state.permissions.includes("manage_users") || readCookie("canManageUsers", "false") === "true";
-        let tempTokens = ["Select a temporary token..."];
-        let permaTokens = ["Select a permanent token..."];
-        let userList = ["Select a user..."]
         if (this.state.haveGoodData) {
             computers = computers.concat(Object.keys(this.state.computerData));
             if (this.state.selectedComputer && this.state.selectedComputer !== "Select a computer..." && computers.includes(this.state.selectedComputer)) {
@@ -332,89 +123,50 @@ class ComputerInfo extends React.Component {
                     }
                 }
             }
-            if (canToken) {
-                tempTokens = tempTokens.concat(this.state.tempTokens);
-                permaTokens = permaTokens.concat(this.state.permaTokens);
-            } if (canManageUsers) {
-                userList = userList.concat(this.state.userList);
-            }
 
         }
         return (
             <div>
-                <h1 style={{color: textColor}} className="title is-1">Computer Status</h1>
+                <h1 style={{color: this.props.textColor}} className="title is-1">Computer Status</h1>
                 <br/>
                 <div className="columns">
                     <div className="column is-one-quarter">
-                        <InputField value={this.state.ip} bgColor={backgroundColor} textColor={textColor} handleChange={this.getIP} inputText="IP Address: " type="text"/>
-                        <InputField value={this.state.username} bgColor={backgroundColor} textColor={textColor} handleChange={this.getUsername} inputText="Username: " type="text"/>
-                        <InputField value={this.state.password} bgColor={backgroundColor} textColor={textColor} handleChange={(event) => this.setState({password: event.target.value})} inputText="Password: " type="password"/>
+                        <InputField value={this.props.ip} bgColor={this.props.backgroundColor} textColor={this.props.textColor} handleChange={(event) => this.props.getField("ip", event.target.value)} inputText="IP Address: " type="text"/>
+                        <InputField value={this.props.username} bgColor={this.props.backgroundColor} textColor={this.props.textColor} handleChange={(event) => this.props.getField("username", event.target.value)} inputText="Username: " type="text"/>
+                        <InputField value={this.props.password} bgColor={this.props.backgroundColor} textColor={this.props.textColor} handleChange={(event) => this.props.getField("password", event.target.value)} inputText="Password: " type="password"/>
                         <br/>
                         <br/>
-                        <Button textColor={buttonTextColor} handleClick={this.handleCookieChange} value="Save Information in Cookies" buttonType={this.state.useCookies ? "is-success" : "is-danger"}/>
+                        <Button textColor={this.props.buttonTextColor} handleClick={this.props.toggleCookies} value="Save Information in Cookies" buttonType={this.props.useCookies ? "is-success" : "is-danger"}/>
                         <br/>
                         <br/>
-                        <Button textColor={buttonTextColor} handleClick={this.toggleDarkMode} value="Toggle Dark Mode" buttonType="is-info"/>
+                        <Button textColor={this.props.buttonTextColor} handleClick={this.props.toggleDarkMode} value="Toggle Dark Mode" buttonType="is-info"/>
                         <br/>
                         <br/>
-                        <Dropdown handleChange={(event) => this.setState({selectedComputer: event.target.value})} items={computers} textColor={textColor} bgColor={backgroundColor}/>
+                        <Dropdown handleChange={(event) => this.setState({selectedComputer: event.target.value})} items={computers} textColor={this.props.textColor} bgColor={this.props.backgroundColor}/>
                         <br/>
                         <br/>
-                        <SmallHero isVisible={true} textColor={buttonTextColor} heroType={this.state.statusHeroType} text={this.state.statusInfo}/>
+                        <SmallHero isVisible={true} textColor={this.props.buttonTextColor} heroType={this.state.statusHeroType} text={this.state.statusInfo}/>
                     </div>
 
                     <div className="column">
-                        <SmallHero isVisible={showStatuses} textColor={buttonTextColor} heroType={pcHeroType} text={pcInfo}/>
-                        <SmallHero isVisible={showStatuses} textColor={buttonTextColor} heroType={ramHeroType} text={ramInfo}/>
-                        <SmallHero isVisible={showStatuses} textColor={buttonTextColor} heroType={cpuHeroType} text={cpuInfo}/>
-                        <SmallHero isVisible={showStatuses && turboInfo !== null} textColor={buttonTextColor} heroType="is-success" text={turboInfo}/>
-                        <SmallHero isVisible={showStatuses && cpuTemps !== null} textColor={buttonTextColor} heroType={cpuTempHeroType} text={cpuTemps}/>
-                        <SmallHero isVisible={showStatuses} textColor={buttonTextColor} heroType={cpuUsageHeroType} text={cpuUsages}/>
+                        <SmallHero isVisible={showStatuses} textColor={this.props.buttonTextColor} heroType={pcHeroType} text={pcInfo}/>
+                        <SmallHero isVisible={showStatuses} textColor={this.props.buttonTextColor} heroType={ramHeroType} text={ramInfo}/>
+                        <SmallHero isVisible={showStatuses} textColor={this.props.buttonTextColor} heroType={cpuHeroType} text={cpuInfo}/>
+                        <SmallHero isVisible={showStatuses && turboInfo !== null} textColor={this.props.buttonTextColor} heroType="is-success" text={turboInfo}/>
+                        <SmallHero isVisible={showStatuses && cpuTemps !== null} textColor={this.props.buttonTextColor} heroType={cpuTempHeroType} text={cpuTemps}/>
+                        <SmallHero isVisible={showStatuses} textColor={this.props.buttonTextColor} heroType={cpuUsageHeroType} text={cpuUsages}/>
                     </div>
                 </div>
                 <div className="columns">
                     <div className="column is-one-third">
-                        <Modal buttonTextColor={buttonTextColor} label="Open Token Manager"
-                        elem={
-                            <SettingManager 
-                            showLabel="Show Token Manager" hasPermission={canToken} textColor={textColor} bgColor={backgroundColor} buttonTextColor={buttonTextColor}
-                            elemType="Token" refreshFunction={this.refreshTokens} elems={[
-                                <DropdownButton 
-                                    items={tempTokens} textColor={textColor} bgColor={backgroundColor} buttonTextColor={buttonTextColor}
-                                    handleClick={this.deleteTempToken} buttonLabel="Delete Selected Temporary Token"
-                                />,
-                                <DropdownButton 
-                                    items={permaTokens} textColor={textColor} bgColor={backgroundColor} buttonTextColor={buttonTextColor}
-                                    handleClick={this.deletePermaToken} buttonLabel="Delete Selected Permanent Token"
-                                />
-                            ]}
-                        />
-                        }
-                        />
+                        <Link to="/gui_tokens">
+                            <Button textColor={this.props.buttonTextColor} value={"Open Token Manager"} buttonType="is-info"/>
+                        </Link>
                     </div>
                     <div className="column is-one-third">
-                        <Modal buttonTextColor={buttonTextColor} label="Open User Manager"
-                        elem={
-                            <SettingManager
-                            showLabel={"Show User Manager"} hasPermission={canManageUsers} textColor={textColor} bgColor={backgroundColor} buttonTextColor={buttonTextColor}
-                            elemType="User" refreshFunction={this.refreshUsers} label="Remove Users: " onClose={() => this.setState({newUserPermissions: []})}
-                            elems={[
-                                <DropdownButton 
-                                    items={userList} textColor={textColor} bgColor={backgroundColor}
-                                    buttonTextColor={buttonTextColor} handleClick={this.deleteUser} buttonLabel="Delete Selected User"
-                                />, <br/>, <br/>, <br/>,
-                                <label className="label" style={{color: textColor}}>Add Users:</label>,
-                                <InputButton textColor={textColor} bgColor={backgroundColor} buttonTextColor={buttonTextColor} label="New User's Username: " buttonLabel="Add User" type="text"
-                                handleClick={this.addUser}/>,
-                                <InputField value={this.state.newUserPassword} bgColor={backgroundColor} textColor={textColor} handleChange={(val) => this.setState({newUserPassword: val})} inputText=" New User's Password: " type="password"/>,
-                                <CheckboxLabel textColor={textColor} label="New User can Manage Users: " handleChange={(val) => this.handleNewUserP("manage_users")}/>,
-                                <CheckboxLabel textColor={textColor} label="New User can Revoke Tokens " handleChange={(val) => this.handleNewUserP("revoke_tokens")}/>,
-                                <CheckboxLabel textColor={textColor} label="New User can See Computer Info: " handleChange={(val) => this.handleNewUserP("client_user")}/>,
-                                <CheckboxLabel textColor={textColor} label="New User can Send Computer Info: " handleChange={(val) => this.handleNewUserP("computer_user")}/>
-                            ]}
-                        />
-                        }
-                        />
+                        <Link to="/gui_users">
+                            <Button textColor={this.props.buttonTextColor} value={"Open User Manager"} buttonType="is-info"/>
+                        </Link>
                     </div>
                 </div>
             </div>
