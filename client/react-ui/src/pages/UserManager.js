@@ -18,12 +18,16 @@ class UserManager extends React.Component {
      */
     constructor(props) {
         super(props);
-        this.state = {firstRefresh: false, newUserPassword: "", newUserPermissions: [], userList: [], selectedUser: ""};
+        this.state = {newUserPassword: "", newUserPermissions: [], userList: [], selectedUser: ""};
 
         this.handleNewUserP = this.handleNewUserP.bind(this);
         this.refreshUsers = this.refreshUsers.bind(this);
         this.addUser = this.addUser.bind(this);
         this.deleteUser = this.deleteUser.bind(this);
+    }
+
+    componentDidMount() {
+        this.refreshUsers();
     }
 
     async refreshUsers() {
@@ -62,11 +66,6 @@ class UserManager extends React.Component {
     }
 
     render() {
-        if (!this.state.firstRefresh) {
-            this.refreshUsers();
-            this.setState({firstRefresh: true});
-        }
-
         let userList = ["Select a user..."]
         userList = userList.concat(this.state.userList);
 

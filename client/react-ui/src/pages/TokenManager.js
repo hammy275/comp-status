@@ -19,12 +19,16 @@ class TokenManager extends React.Component {
 
     constructor(props) {
         super(props);
-        this.state = {firstRefresh: false, permaTokens: [], selectedPermaToken: null, selectedTempToken: null, tempTokens: []};
+        this.state = {permaTokens: [], selectedPermaToken: null, selectedTempToken: null, tempTokens: []};
 
         this.refreshTokens = this.refreshTokens.bind(this);
         this.deletePermaToken = this.deletePermaToken.bind(this);
         this.deleteTempToken = this.deleteTempToken.bind(this);
         this.afterTokenDelete = this.afterTokenDelete.bind(this);
+    }
+
+    componentDidMount() {
+        this.refreshTokens();
     }
 
     async refreshTokens() {
@@ -74,11 +78,6 @@ class TokenManager extends React.Component {
     }
 
     render() {
-        if (!this.state.firstRefresh) {
-            this.refreshTokens();
-            this.setState({firstRefresh: true});
-        }
-
         let tempTokens = ["Select a temporary token..."];
         let permaTokens = ["Select a permanent token..."];
 

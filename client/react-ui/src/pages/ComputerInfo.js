@@ -34,12 +34,19 @@ class ComputerInfo extends React.Component {
 
         this.getData = this.getData.bind(this);
 
-        this.state = {computerData: {}, selectedComputer: null};
+        this.state = {computerData: {}, selectedComputer: null, interval: null};
         this.getData();
     }
 
     componentDidMount() {
-        setInterval(this.getData, 5000);
+        const interval = setInterval(this.getData, 5000);
+        this.setState({interval: interval});
+    }
+
+    componentWillUnmount() {
+        if (this.state.interval !== null) {
+            clearInterval(this.state.interval);
+        }
     }
 
     async getData() {
