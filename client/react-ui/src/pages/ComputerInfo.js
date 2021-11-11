@@ -1,28 +1,16 @@
 import React from "react";
-import { Link } from "react-router-dom";
 
-import Button from "../components/Button";
 import Dropdown from "../components/Dropdown";
-import InputField from "../components/InputField";
 import SmallHero from "../components/SmallHero";
 
 class ComputerInfo extends React.Component {
     /**
      * Props:
-     *  delCookie: Function that handles cookie deletion
      *  removeFromArray: Function that removes items from an array
      *  removeFromArrayPartialMatch: Function that removes items from an array with a partial match
-     *  readCookie: Function that reads a cookie's status
-     *  setCookie: Sets a cookie
      *  postWithAuth: Post with authentication function
-     *  getField: Function for getting the data in a field
-     *  toggleDarkMode: Function to toggle dark mode
-     *  toggleCookies: Function to toggle whether to use cookies
      * 
      *  ip: IP address
-     *  username: Username
-     *  password: Password
-     *  useCookies: Whether or not to use cookies
      *  isDark: If in dark theme
      *  textColor: Text Color
      *  buttonTextColor: Button text color
@@ -35,12 +23,12 @@ class ComputerInfo extends React.Component {
         this.getData = this.getData.bind(this);
 
         this.state = {computerData: {}, selectedComputer: null, interval: null};
-        this.getData();
     }
 
     componentDidMount() {
         const interval = setInterval(this.getData, 5000);
         this.setState({interval: interval});
+        this.getData();
     }
 
     componentWillUnmount() {
@@ -113,7 +101,7 @@ class ComputerInfo extends React.Component {
                 }
                 cpuUsages = cd["cpu_usages"].split(",").join("%, ") + "%";
                 ramInfo = `Memory: ${cd["used_memory"]} GB/${cd["current_memory"]} GB (${memUsage}% usage)`;
-                turboInfo = `Turbo: ${cd["current_turbo"]} GHz/${cd["max_turbo"]} GHz`;
+                turboInfo = `Turbo: ${cd["current_turbo"]} MHz/${cd["max_turbo"]} MHz`;
                 if (cd["current_turbo"] === null) {
                     turboInfo = null;
                 }
@@ -138,17 +126,6 @@ class ComputerInfo extends React.Component {
                 <br/>
                 <div className="columns">
                     <div className="column is-one-quarter">
-                        <InputField value={this.props.ip} bgColor={this.props.backgroundColor} textColor={this.props.textColor} handleChange={(event) => this.props.getField("ip", event.target.value)} inputText="IP Address: " type="text"/>
-                        <InputField value={this.props.username} bgColor={this.props.backgroundColor} textColor={this.props.textColor} handleChange={(event) => this.props.getField("username", event.target.value)} inputText="Username: " type="text"/>
-                        <InputField value={this.props.password} bgColor={this.props.backgroundColor} textColor={this.props.textColor} handleChange={(event) => this.props.getField("password", event.target.value)} inputText="Password: " type="password"/>
-                        <br/>
-                        <br/>
-                        <Button textColor={this.props.buttonTextColor} handleClick={this.props.toggleCookies} value="Save Information in Cookies" buttonType={this.props.useCookies ? "is-success" : "is-danger"}/>
-                        <br/>
-                        <br/>
-                        <Button textColor={this.props.buttonTextColor} handleClick={this.props.toggleDarkMode} value="Toggle Dark Mode" buttonType="is-info"/>
-                        <br/>
-                        <br/>
                         <Dropdown handleChange={(event) => this.setState({selectedComputer: event.target.value})} items={computers} textColor={this.props.textColor} bgColor={this.props.backgroundColor}/>
                         <br/>
                         <br/>
@@ -162,18 +139,6 @@ class ComputerInfo extends React.Component {
                         <SmallHero isVisible={showStatuses && turboInfo !== null} textColor={this.props.buttonTextColor} heroType="is-success" text={turboInfo}/>
                         <SmallHero isVisible={showStatuses && cpuTemps !== null} textColor={this.props.buttonTextColor} heroType={cpuTempHeroType} text={cpuTemps}/>
                         <SmallHero isVisible={showStatuses} textColor={this.props.buttonTextColor} heroType={cpuUsageHeroType} text={cpuUsages}/>
-                    </div>
-                </div>
-                <div className="columns">
-                    <div className="column is-one-third">
-                        <Link to="/gui_tokens">
-                            <Button textColor={this.props.buttonTextColor} value={"Open Token Manager"} buttonType="is-info"/>
-                        </Link>
-                    </div>
-                    <div className="column is-one-third">
-                        <Link to="/gui_users">
-                            <Button textColor={this.props.buttonTextColor} value={"Open User Manager"} buttonType="is-info"/>
-                        </Link>
                     </div>
                 </div>
             </div>
