@@ -2,7 +2,7 @@
 import React from "react";
 import ComputerInfo from "./pages/ComputerInfo";
 
-import { Route, Switch } from "react-router";
+import { Route, Routes } from "react-router";
 
 import axios from "axios";
 import UserManager from "./pages/UserManager";
@@ -205,24 +205,24 @@ class App extends React.Component {
         document.getElementById("html").setAttribute("class", backgroundStyle);
 
         return(
-        <Switch>
-            <Route path="/gui_users">
+        <Routes>
+            <Route path="/gui_users" element={
                 <UserManager buttonTextColor={buttonTextColor} textColor={textColor} backgroundColor={backgroundColor}
-                removeFromArray={this.removeFromArray} postWithAuth={this.postWithAuth} ip={this.state.ip}/>
-            </Route>
-            <Route path="/gui_tokens">
+                removeFromArray={this.removeFromArray} postWithAuth={this.postWithAuth} ip={this.state.ip}/>}
+            />
+            <Route path="/gui_tokens" element={
                 <TokenManager buttonTextColor={buttonTextColor} textColor={textColor} backgroundColor={backgroundColor}
                 removeFromArray={this.removeFromArray} removeFromArrayPartialMatch={this.removeFromArrayPartialMatch}
-                postWithAuth={this.postWithAuth} ip={this.state.ip}/>
-            </Route>
-            <Route path="/">
+                postWithAuth={this.postWithAuth} ip={this.state.ip}/>}
+            />
+            <Route path="/" element={
                 <ComputerInfo delCookie={this.delCookie} removeFromArray={this.removeFromArray} removeFromArrayPartialMatch={this.removeFromArrayPartialMatch}
                 readCookie={this.readCookie} setCookie={this.setCookie} postWithAuth={this.postWithAuth} getField={this.getField}
                 ip={this.state.ip} username={this.state.username} password={this.state.password}
                 isDark={this.state.isDark} toggleDarkMode={this.toggleDarkMode} useCookies={this.state.useCookies} toggleCookies={this.handleCookieChange}
-                textColor={textColor} backgroundColor={backgroundColor} backgroundStyle={backgroundStyle} buttonTextColor={buttonTextColor}/>;
-            </Route>
-        </Switch>);
+                textColor={textColor} backgroundColor={backgroundColor} backgroundStyle={backgroundStyle} buttonTextColor={buttonTextColor}/>}
+            />
+        </Routes>);
     }
 }
 
