@@ -109,7 +109,7 @@ def ping(ip):
         bool: Whether the requested JSON at thes URL has the key "message" that equals "Pong!"
 
     """
-    data = post_with_auth("https://" + ip + "/ping")
+    data = post_with_auth(ip + "/ping")
     return data["message"]
 
 

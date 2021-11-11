@@ -1,7 +1,8 @@
 import React from "react";
 
 export default function Checkbox(props) {
+    const checked = props.checked === true;
     return (
-        <input type="checkbox" onChange={(event) => props.handleChange(event.target.checked)}/>
+        <input checked={checked} type="checkbox" onChange={(event) => props.handleChange(event.target.checked)}/>
     );
 }

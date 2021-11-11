@@ -31,7 +31,7 @@ class UserManager extends React.Component {
     }
 
     async refreshUsers() {
-        const returned = await this.props.postWithAuth("https://" + this.props.ip + "/list_users", {});
+        const returned = await this.props.postWithAuth(this.props.ip + "/list_users", {});
         if (returned === null) return;
         this.setState({userList: Object.keys(returned["users"])});
     }
@@ -47,7 +47,7 @@ class UserManager extends React.Component {
     }
 
     async addUser(new_user) {
-        const returned = await this.props.postWithAuth("https://" + this.props.ip + "/add_user", {"user_to_add": new_user, "password_of_user": this.state["newUserPassword"], permissions: this.state["newUserPermissions"]});
+        const returned = await this.props.postWithAuth(this.props.ip + "/add_user", {"user_to_add": new_user, "password_of_user": this.state["newUserPassword"], permissions: this.state["newUserPermissions"]});
         if (returned === null) return;
         let heroType = "is-danger";
         if (returned["message"] === "User successfully added!") {
@@ -59,7 +59,7 @@ class UserManager extends React.Component {
     async deleteUser(user) {
         if (user) {
             this.setState({selectedUser: user});
-            const returned = await this.props.postWithAuth("https://" + this.props.ip + "/delete_user", {"user_to_delete": user});
+            const returned = await this.props.postWithAuth(this.props.ip + "/delete_user", {"user_to_delete": user});
             if (returned === null) return;
             this.setState({statusHeroType: "is-success", statusInfo: returned["message"], selectedUser: null, userList: this.props.removeFromArray(this.state.userList, this.state.selectedUser)});
         }

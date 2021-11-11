@@ -20,6 +20,7 @@ class App extends React.Component {
         this.getField = this.getField.bind(this);
         this.toggleDarkMode = this.toggleDarkMode.bind(this);
         this.handleCookieChange = this.handleCookieChange.bind(this);
+        this.toggleUseIP = this.toggleUseIP.bind(this);
 
         let useCookiesFromCookie = this.readCookie("useCookies") === "true";
         let isDark = this.readCookie("isDark") === "true";
@@ -27,10 +28,12 @@ class App extends React.Component {
         let username = this.readCookie("username") ? this.readCookie("username") : "";
         let token = this.readCookie("token") ? this.readCookie("token") : "";
         let permaToken = this.readCookie("permaToken") ? this.readCookie("permaToken") : "";
+        let useCustomIP = ip !== "";
 
         this.state = {
             ip: ip, username: username, password: "", token: token, permaToken: permaToken,
-            isDark: isDark, useCookies: useCookiesFromCookie, statusInfo: "Waiting...", statusHeroType: "is-info"
+            isDark: isDark, useCookies: useCookiesFromCookie, statusInfo: "Waiting...", statusHeroType: "is-info",
+            useCustomIP: useCustomIP
         };
     }
 
@@ -38,6 +41,13 @@ class App extends React.Component {
         // Used for setting IP, username, and password from the field
         this.setState((state) => {
             state[field] = value;
+
+            if (field === "username") {
+                this.setCookie("username", value, 1000 * 60 * 60 * 24 * 365);
+            } else if (field === "ip" && state.useCustomIP) {
+                this.setCookie("ipAddress", state.ip, 1000 * 60 * 60 * 24 * 365);
+            }
+
             return state;
         })
     }
@@ -108,8 +118,13 @@ class App extends React.Component {
         }
     }
     
-    checkAuth(returned) {
-        if (returned["message"] === "Generated perma-token!") {
+    checkAuth(returned, status) {
+        if (status !== 200) {
+            this.setState({haveGoodData: false, statusHeroType: "is-danger", token: null,
+            statusInfo: "Error while contacting provided address! Maybe the server is down, or your browser doesn't trust the cert!"
+        });
+            return "fail";
+        } else if (returned["message"] === "Generated perma-token!") {
             this.setState({permaToken: returned["token"], statusHeroType: "is-info", statusInfo: "Authenticating..."});
             if (this.state.useCookies) {
                 this.setCookie("permaToken", this.state.permaToken, 1000*60*60*24*36500);
@@ -143,16 +158,11 @@ class App extends React.Component {
             this.delCookie("token");
             this.delCookie("permaToken");
             return "fail";
-        } else if (returned["error"] !== 200) {
-            this.setState({haveGoodData: false, statusHeroType: "is-danger", token: null,
-            statusInfo: "Error while contacting provided address! Maybe the server is down, or your browser doesn't trust the cert!"
-        });
-            return "fail";
         } else if (returned["message"] === "Token expired!") {
             this.setState({token: null});
             this.delCookie("token");
             return "retry";
-        } else if (returned["message"] && returned["error"] === 200) {
+        } else if (returned["message"] && status === 200) {
             return "success";
         }
         return "fail";
@@ -170,10 +180,10 @@ class App extends React.Component {
         }
         let resp, status;
         let toSend = Object.assign({}, authData, data);
-        while (!status || status === "retry") {
+        while (!status) {
             try {
                 resp = await axios.post(url, toSend);
-                status = this.checkAuth(resp.data);
+                status = this.checkAuth(resp.data, resp.status);
             } catch (error) {
                 if (error.response) {
                     status = this.checkAuth(error.response.data);
@@ -187,11 +197,29 @@ class App extends React.Component {
         return null;
     }
 
+    toggleUseIP() {
+        this.setState((state) => {
+            state.useCustomIP = !state.useCustomIP;
+            if (state.useCustomIP) {
+                this.setCookie("ipAddress", state.ip, 1000 * 60 * 60 * 24 * 365);
+            } else {
+                this.setCookie("ip", "", 1000 * 60 * 60 * 24 * 365);
+            }
+            return state;
+        });
+    }
+
     render() {
         let textColor;
         let backgroundColor;
         let backgroundStyle;
         let buttonTextColor;
+        let ip = this.state.ip;
+        if (!this.state.useCustomIP) {
+            ip = "";
+        } else {
+            ip = "https://" + ip;
+        }
         if (this.state.isDark) {
             textColor = "#7f7f7f";
             backgroundColor = "#363636";
@@ -212,22 +240,23 @@ class App extends React.Component {
             <Routes>
                 <Route path="/gui_users" element={
                     <UserManager buttonTextColor={buttonTextColor} textColor={textColor} backgroundColor={backgroundColor}
-                    removeFromArray={this.removeFromArray} postWithAuth={this.postWithAuth} ip={this.state.ip}/>}
+                    removeFromArray={this.removeFromArray} postWithAuth={this.postWithAuth} ip={ip}/>}
                 />
                 <Route path="/gui_tokens" element={
                     <TokenManager buttonTextColor={buttonTextColor} textColor={textColor} backgroundColor={backgroundColor}
                     removeFromArray={this.removeFromArray} removeFromArrayPartialMatch={this.removeFromArrayPartialMatch}
-                    postWithAuth={this.postWithAuth} ip={this.state.ip}/>}
+                    postWithAuth={this.postWithAuth} ip={ip}/>}
                 />
                 <Route path="/" element={
                     <ComputerInfo removeFromArray={this.removeFromArray} removeFromArrayPartialMatch={this.removeFromArrayPartialMatch}
-                    postWithAuth={this.postWithAuth} ip={this.state.ip} isDark={this.state.isDark}
+                    postWithAuth={this.postWithAuth} ip={ip} isDark={this.state.isDark}
                     textColor={textColor} backgroundColor={backgroundColor} backgroundStyle={backgroundStyle} buttonTextColor={buttonTextColor}/>}
                 />
                 <Route path="/login" element={
                     <Login ip={this.state.ip} username={this.state.username} password={this.state.password} backgroundColor={backgroundColor}
                     textColor={textColor} buttonTextColor={buttonTextColor} getField={this.getField} toggleCookies={this.handleCookieChange}
-                    toggleDarkMode={this.toggleDarkMode} useCookies={this.state.useCookies}/>
+                    toggleDarkMode={this.toggleDarkMode} useCookies={this.state.useCookies} toggleUseIP={this.toggleUseIP}
+                    useIP={this.state.useCustomIP}/>
                 }/>
             </Routes>
         </>);

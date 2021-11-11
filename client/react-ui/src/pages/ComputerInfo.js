@@ -26,7 +26,7 @@ class ComputerInfo extends React.Component {
     }
 
     componentDidMount() {
-        const interval = setInterval(this.getData, 5000);
+        const interval = setInterval(this.getData, 3000);
         this.setState({interval: interval});
         this.getData();
     }
@@ -38,7 +38,7 @@ class ComputerInfo extends React.Component {
     }
 
     async getData() {
-        const data = await this.props.postWithAuth("https://" + this.props.ip + "/give_data", {});
+        const data = await this.props.postWithAuth(this.props.ip + "/give_data", {});
         if (data === null) {
             this.setState({haveGoodData: false});
             return;
