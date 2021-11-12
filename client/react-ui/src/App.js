@@ -21,6 +21,7 @@ class App extends React.Component {
         this.toggleDarkMode = this.toggleDarkMode.bind(this);
         this.handleCookieChange = this.handleCookieChange.bind(this);
         this.toggleUseIP = this.toggleUseIP.bind(this);
+        this.attemptLogin = this.attemptLogin.bind(this);
 
         let useCookiesFromCookie = this.readCookie("useCookies") === "true";
         let isDark = this.readCookie("isDark") === "true";
@@ -29,11 +30,12 @@ class App extends React.Component {
         let token = this.readCookie("token") ? this.readCookie("token") : "";
         let permaToken = this.readCookie("permaToken") ? this.readCookie("permaToken") : "";
         let useCustomIP = ip !== "";
+        let loggedIn = token !== "";
 
         this.state = {
             ip: ip, username: username, password: "", token: token, permaToken: permaToken,
             isDark: isDark, useCookies: useCookiesFromCookie, statusInfo: "Waiting...", statusHeroType: "is-info",
-            useCustomIP: useCustomIP
+            useCustomIP: useCustomIP, loggedIn: loggedIn
         };
     }
 
@@ -168,7 +170,10 @@ class App extends React.Component {
         return "fail";
     }
     
-    async postWithAuth(url, data) {
+    async postWithAuth(url, data, handlingLogin) {
+        if (!this.state.loggedIn && !handlingLogin) {
+            return null;
+        }
         let authData;
         if (!this.state.permaToken) {
             authData = {"user": this.state.username, "password": this.state.password, "auth": "password"};
@@ -180,18 +185,19 @@ class App extends React.Component {
         }
         let resp, status;
         let toSend = Object.assign({}, authData, data);
-        while (!status) {
-            try {
-                resp = await axios.post(url, toSend);
-                status = this.checkAuth(resp.data, resp.status);
-            } catch (error) {
-                if (error.response) {
-                    status = this.checkAuth(error.response.data);
-                } else {
-                    return null;
-                }
-                
+        try {
+            resp = await axios.post(url, toSend);
+            status = this.checkAuth(resp.data, resp.status);
+        } catch (error) {
+            if (error.response) {
+                status = this.checkAuth(error.response.data);
+            } else {
+                return handlingLogin ? "fail" : null;
             }
+            
+        }
+        if (handlingLogin) {
+            return status;
         }
         if (status === "success") return resp.data;
         return null;
@@ -207,6 +213,20 @@ class App extends React.Component {
             }
             return state;
         });
+    }
+
+    async attemptLogin() {
+        let ip = this.state.ip;
+        if (!this.state.useCustomIP) {
+            ip = "";
+        } else {
+            ip = "https://" + ip;
+        }
+        let res = "retry";
+        while (res === "retry") {
+            res = await this.postWithAuth(ip + "/ping", {}, true);
+        }
+        this.setState({loggedIn: res === "success"});
     }
 
     render() {
@@ -256,7 +276,8 @@ class App extends React.Component {
                     <Login ip={this.state.ip} username={this.state.username} password={this.state.password} backgroundColor={backgroundColor}
                     textColor={textColor} buttonTextColor={buttonTextColor} getField={this.getField} toggleCookies={this.handleCookieChange}
                     toggleDarkMode={this.toggleDarkMode} useCookies={this.state.useCookies} toggleUseIP={this.toggleUseIP}
-                    useIP={this.state.useCustomIP}/>
+                    useIP={this.state.useCustomIP} loggedIn={this.state.loggedIn} handleLogin={this.attemptLogin}
+                    handleLogout={() => this.setState({loggedIn: false, permaToken: "", token: ""})}/>
                 }/>
             </Routes>
         </>);

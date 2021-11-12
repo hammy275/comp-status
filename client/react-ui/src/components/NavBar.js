@@ -17,16 +17,16 @@ export default function NavBar(props) {
             <div className="navbar-menu is-active" style={{backgroundColor: props.backgroundColor}}>
                 <div className="navbar-start">
                     <Link to="/">
-                        <a className="navbar-item" style={{color: props.textColor, backgroundColor: props.backgroundColor}} href="#/">View Computer Status</a>
+                        <h2 className="navbar-item" style={{color: props.textColor, backgroundColor: props.backgroundColor}}>View Computer Status</h2>
                     </Link>
                     <Link to="/gui_users">
-                        <a className="navbar-item" style={{color: props.textColor, backgroundColor: props.backgroundColor}} href="#/">Manage Users</a>
+                        <h2 className="navbar-item" style={{color: props.textColor, backgroundColor: props.backgroundColor}}>Manage Users</h2>
                     </Link>
                     <Link to="/gui_tokens">
-                        <a className="navbar-item" style={{color: props.textColor, backgroundColor: props.backgroundColor}} href="#/">Manage Tokens</a>
+                        <h2 className="navbar-item" style={{color: props.textColor, backgroundColor: props.backgroundColor}}>Manage Tokens</h2>
                     </Link>
                     <Link to="/login">
-                        <a className="navbar-item" style={{color: props.textColor, backgroundColor: props.backgroundColor}} href="#/">Login/Settings</a>
+                        <h2 className="navbar-item" style={{color: props.textColor, backgroundColor: props.backgroundColor}}>Login/Settings</h2>
                     </Link>
                 </div>
             </div>
