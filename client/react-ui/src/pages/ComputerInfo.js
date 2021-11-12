@@ -2,6 +2,7 @@ import React from "react";
 
 import Dropdown from "../components/Dropdown";
 import SmallHero from "../components/SmallHero";
+import Title from "../components/Title";
 
 class ComputerInfo extends React.Component {
     /**
@@ -122,7 +123,7 @@ class ComputerInfo extends React.Component {
         }
         return (
             <div>
-                <h1 style={{color: this.props.textColor}} className="title is-1">Computer Status</h1>
+                <Title textColor={this.props.textColor} title="Computer Status"/>
                 <br/>
                 <div className="columns">
                     <div className="column is-one-quarter">

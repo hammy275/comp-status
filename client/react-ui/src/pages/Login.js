@@ -3,6 +3,7 @@ import React from "react";
 import Button from "../components/Button";
 import CheckboxLabel from "../components/CheckboxLabel";
 import InputField from "../components/InputField";
+import Title from "../components/Title";
 
 class Login extends React.Component {
     /**
@@ -31,6 +32,7 @@ class Login extends React.Component {
         this.getCustomIPCheck = this.getCustomIPCheck.bind(this);
         this.getLoggedOut = this.getLoggedOut.bind(this);
         this.getLoggedIn = this.getLoggedIn.bind(this);
+        this.getTitle = this.getTitle.bind(this);
     }
     
     getIPBox() {
@@ -64,23 +66,34 @@ class Login extends React.Component {
         );
     }
 
+    getTitle() {
+        let title = "Login/Settings";
+        if (this.props.loggedIn) {
+            title = "Logout/Settings";
+        }
+        return <Title textColor={this.props.textColor} title={title}/>
+    }
+
 
     render() {
         return (
+            <>
+            {this.getTitle()}
             <div className="columns">
-                    <div className="column is-one-fourth">
-                        {this.props.loggedIn ? this.getLoggedIn() : this.getLoggedOut()}
-                    </div>
-                    <div className="column is-one-fourth">
-                        <Button textColor={this.props.buttonTextColor} handleClick={this.props.toggleCookies} value="Save Information in Cookies" buttonType={this.props.useCookies ? "is-success" : "is-danger"}/>
-                        <br/>
-                        <br/>
-                        <Button textColor={this.props.buttonTextColor} handleClick={this.props.toggleDarkMode} value="Toggle Dark Mode" buttonType="is-info"/>
-                        <br/>
-                        <br/>
-                        {this.getCustomIPCheck()}
-                    </div>
+                <div className="column is-one-fourth">
+                    {this.props.loggedIn ? this.getLoggedIn() : this.getLoggedOut()}
+                </div>
+                <div className="column is-one-fourth">
+                    <Button textColor={this.props.buttonTextColor} handleClick={this.props.toggleCookies} value="Save Information in Cookies" buttonType={this.props.useCookies ? "is-success" : "is-danger"}/>
+                    <br/>
+                    <br/>
+                    <Button textColor={this.props.buttonTextColor} handleClick={this.props.toggleDarkMode} value="Toggle Dark Mode" buttonType="is-info"/>
+                    <br/>
+                    <br/>
+                    {this.getCustomIPCheck()}
+                </div>
             </div>
+            </>
         );
     }
 }

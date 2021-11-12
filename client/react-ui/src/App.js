@@ -9,6 +9,7 @@ import UserManager from "./pages/UserManager";
 import TokenManager from "./pages/TokenManager";
 import NavBar from "./components/NavBar";
 import Login from "./pages/Login";
+import SmallHero from "./components/SmallHero";
 
 class App extends React.Component {
 
@@ -22,6 +23,7 @@ class App extends React.Component {
         this.handleCookieChange = this.handleCookieChange.bind(this);
         this.toggleUseIP = this.toggleUseIP.bind(this);
         this.attemptLogin = this.attemptLogin.bind(this);
+        this.logout = this.logout.bind(this);
 
         let useCookiesFromCookie = this.readCookie("useCookies") === "true";
         let isDark = this.readCookie("isDark") === "true";
@@ -29,12 +31,15 @@ class App extends React.Component {
         let username = this.readCookie("username") ? this.readCookie("username") : "";
         let token = this.readCookie("token") ? this.readCookie("token") : "";
         let permaToken = this.readCookie("permaToken") ? this.readCookie("permaToken") : "";
+        
         let useCustomIP = ip !== "";
         let loggedIn = token !== "";
+        let statusInfo = loggedIn ? "Logged in!" : "Waiting for login"
+        let statusHeroType = loggedIn ? "is-success" : "is-info";
 
         this.state = {
             ip: ip, username: username, password: "", token: token, permaToken: permaToken,
-            isDark: isDark, useCookies: useCookiesFromCookie, statusInfo: "Waiting...", statusHeroType: "is-info",
+            isDark: isDark, useCookies: useCookiesFromCookie, statusInfo: statusInfo, statusHeroType: statusHeroType,
             useCustomIP: useCustomIP, loggedIn: loggedIn
         };
     }
@@ -122,6 +127,26 @@ class App extends React.Component {
     
     checkAuth(returned, status) {
         if (status !== 200) {
+            if (returned["message"].includes("Unauthorized")) {
+                this.setState({token: null, haveGoodData: false});
+                this.setState((state, props) => ({failCount: state.failCount + 1}));
+                this.delCookie("token");
+                this.setState({haveGoodData: false, statusHeroType: "is-danger",
+                statusInfo: "Invalid username/password!"});
+                if (this.state.failCount >= 3) {
+                    this.setState({permaToken: null, failCount: 0});
+                }
+                return "fail";
+            } else if (returned["message"] === "No permission!") {
+                this.setState({statusInfo: "User account does not have permission to perform the requested action!", statusHeroType: "is-danger"});
+                return "fail";
+            } else if (returned["message"] === "Token expired!") {
+                this.setState({token: null});
+                this.delCookie("token");
+                return "retry";
+            } else if (returned["message"] && status === 200) {
+                return "success";
+            }
             this.setState({haveGoodData: false, statusHeroType: "is-danger", token: null,
             statusInfo: "Error while contacting provided address! Maybe the server is down, or your browser doesn't trust the cert!"
         });
@@ -135,7 +160,7 @@ class App extends React.Component {
             }
             return "retry";
         } else if (returned["message"] === "Generated temporary-token!") {
-            this.setState({token: returned["token"], permissions: returned["permissions"], statusHeroType: "is-info", statusInfo: "Fetching Data..."});
+            this.setState({token: returned["token"], permissions: returned["permissions"], statusHeroType: "is-success", statusInfo: "Logged in!"});
             if (this.state.useCookies) {
                 this.setCookie("token", this.state.token);
                 this.setCookie("canToken", this.state.permissions.includes("revoke_tokens").toString());
@@ -145,29 +170,9 @@ class App extends React.Component {
         } else if (returned["message"].includes("uccess")) {
             this.setState({haveGoodData: true, statusHeroType: "is-success", statusInfo: returned["message"], failCount: 0});
             return "success";
-        } else if (returned["message"].includes("Unauthorized")) {
-            this.setState({token: null, haveGoodData: false});
-            this.setState((state, props) => ({failCount: state.failCount + 1}));
-            this.delCookie("token");
-            this.setState({haveGoodData: false, statusHeroType: "is-danger",
-            statusInfo: "Invalid username/password!"});
-            if (this.state.failCount >= 3) {
-                this.setState({permaToken: null, failCount: 0});
-            }
-            return "fail";
-        } else if (returned["message"] === "No permission!") {
-            this.setState({token: null, permaToken: null, statusInfo: "User account does not have permission to perform the requested action!", statusHeroType: "is-danger"});
-            this.delCookie("token");
-            this.delCookie("permaToken");
-            return "fail";
-        } else if (returned["message"] === "Token expired!") {
-            this.setState({token: null});
-            this.delCookie("token");
-            return "retry";
-        } else if (returned["message"] && status === 200) {
+        } else if (returned["message"] === "Pong!") {
             return "success";
         }
-        return "fail";
     }
     
     async postWithAuth(url, data, handlingLogin) {
@@ -217,6 +222,7 @@ class App extends React.Component {
 
     async attemptLogin() {
         let ip = this.state.ip;
+        this.setState({statusHeroType: "is-info", statusInfo: "Logging in..."})
         if (!this.state.useCustomIP) {
             ip = "";
         } else {
@@ -227,6 +233,12 @@ class App extends React.Component {
             res = await this.postWithAuth(ip + "/ping", {}, true);
         }
         this.setState({loggedIn: res === "success"});
+    }
+
+    logout() {
+        this.setState({loggedIn: false, permaToken: "", token: "", statusHeroType: "is-info", statusInfo: "Logged out!"});
+        this.delCookie("token");
+        this.delCookie("permaToken");
     }
 
     render() {
@@ -277,9 +289,18 @@ class App extends React.Component {
                     textColor={textColor} buttonTextColor={buttonTextColor} getField={this.getField} toggleCookies={this.handleCookieChange}
                     toggleDarkMode={this.toggleDarkMode} useCookies={this.state.useCookies} toggleUseIP={this.toggleUseIP}
                     useIP={this.state.useCustomIP} loggedIn={this.state.loggedIn} handleLogin={this.attemptLogin}
-                    handleLogout={() => this.setState({loggedIn: false, permaToken: "", token: ""})}/>
+                    handleLogout={this.logout}/>
                 }/>
             </Routes>
+            <br/>
+            <br/>
+            <br/>
+            <div className="columns">
+                <div className="column is-one-third">
+                    <SmallHero isVisible={true} heroType={this.state.statusHeroType} textColor={buttonTextColor} text={this.state.statusInfo}/>
+                </div>
+            </div>
+            
         </>);
     }
 }

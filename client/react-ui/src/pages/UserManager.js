@@ -5,6 +5,7 @@ import CheckboxLabel from "../components/CheckboxLabel";
 import DropdownButton from "../components/DropdownButton";
 import InputButton from "../components/InputButton";
 import InputField from "../components/InputField";
+import Title from "../components/Title";
 
 class UserManager extends React.Component {
     /**
@@ -71,6 +72,7 @@ class UserManager extends React.Component {
 
         return (
             <>
+                <Title textColor={this.props.textColor} title="User Manager"/>
                 <Button textColor={this.props.buttonTextColor} 
                 handleClick={this.refreshUsers} value={"Refresh User List"} buttonType="is-success"/>
                 <br/>
@@ -83,10 +85,10 @@ class UserManager extends React.Component {
                 <InputButton textColor={this.props.textColor} bgColor={this.props.backgroundColor} buttonTextColor={this.props.buttonTextColor} label="New User's Username: " buttonLabel="Add User" type="text"
                 handleClick={this.addUser}/>,
                 <InputField value={this.state.newUserPassword} bgColor={this.props.backgroundColor} textColor={this.props.textColor} handleChange={(event) => this.setState({newUserPassword: event.target.value})} inputText=" New User's Password: " type="password"/>
-                <CheckboxLabel textColor={this.props.textColor} label="New User can Manage Users: " handleChange={() => this.handleNewUserP("manage_users")}/>
-                <CheckboxLabel textColor={this.props.textColor} label="New User can Revoke Tokens " handleChange={() => this.handleNewUserP("revoke_tokens")}/>
-                <CheckboxLabel textColor={this.props.textColor} label="New User can See Computer Info: " handleChange={() => this.handleNewUserP("client_user")}/>
-                <CheckboxLabel textColor={this.props.textColor} label="New User can Send Computer Info: " handleChange={() => this.handleNewUserP("computer_user")}/>
+                <CheckboxLabel checked={this.state.newUserPermissions.includes("manage_users")} textColor={this.props.textColor} label="New User can Manage Users: " handleChange={() => this.handleNewUserP("manage_users")}/>
+                <CheckboxLabel checked={this.state.newUserPermissions.includes("revoke_tokens")} textColor={this.props.textColor} label="New User can Revoke Tokens " handleChange={() => this.handleNewUserP("revoke_tokens")}/>
+                <CheckboxLabel checked={this.state.newUserPermissions.includes("client_user")} textColor={this.props.textColor} label="New User can See Computer Info: " handleChange={() => this.handleNewUserP("client_user")}/>
+                <CheckboxLabel checked={this.state.newUserPermissions.includes("computer_user")} textColor={this.props.textColor} label="New User can Send Computer Info: " handleChange={() => this.handleNewUserP("computer_user")}/>
             </>
         );
     }

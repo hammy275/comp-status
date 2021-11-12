@@ -2,6 +2,7 @@ import React from "react";
 
 import Button from "../components/Button";
 import DropdownButton from "../components/DropdownButton";
+import Title from "../components/Title";
 
 class TokenManager extends React.Component {
     /**
@@ -50,7 +51,6 @@ class TokenManager extends React.Component {
     }
 
     afterTokenDelete(returned) {
-        console.log(returned);
         if (returned === null) return;
         let heroType = "is-success";
         if (returned["message"] !== "Perma-token deleted successfully!" && returned["message"] !== "Temp-token deleted successfully!") {
@@ -85,6 +85,7 @@ class TokenManager extends React.Component {
         permaTokens = permaTokens.concat(this.state.permaTokens);
         return (
             <>
+                <Title textColor={this.props.textColor} title="Token Manager"/>
                 <Button textColor={this.props.buttonTextColor} 
                 handleClick={this.refreshTokens} value={"Refresh Token List"} buttonType="is-success"/>
                 <br/>
