@@ -39,7 +39,7 @@ class ComputerInfo extends React.Component {
     }
 
     async getData() {
-        const data = await this.props.postWithAuth(this.props.ip + "/give_data", {});
+        const data = await this.props.postWithAuth(this.props.ip + "/api/data/get", {});
         if (data === null) {
             this.setState({haveGoodData: false});
             return;

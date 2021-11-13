@@ -127,7 +127,9 @@ class App extends React.Component {
     
     checkAuth(returned, status) {
         if (status !== 200) {
-            if (returned["message"].includes("Unauthorized")) {
+            if (returned.message === undefined) {
+
+            } else if (returned["message"].includes("Unauthorized")) {
                 this.setState({token: null, haveGoodData: false});
                 this.setState((state, props) => ({failCount: state.failCount + 1}));
                 this.delCookie("token");
@@ -230,7 +232,7 @@ class App extends React.Component {
         }
         let res = "retry";
         while (res === "retry") {
-            res = await this.postWithAuth(ip + "/ping", {}, true);
+            res = await this.postWithAuth(ip + "/api/ping", {}, true);
         }
         this.setState({loggedIn: res === "success"});
     }

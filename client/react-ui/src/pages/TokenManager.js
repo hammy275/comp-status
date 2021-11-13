@@ -33,7 +33,7 @@ class TokenManager extends React.Component {
     }
 
     async refreshTokens() {
-        const returned = await this.props.postWithAuth(this.props.ip + "/get_tokens", {});
+        const returned = await this.props.postWithAuth(this.props.ip + "/api/tokens/get", {});
         if (returned === null) return;
         let permaTokensList = [];
         let tempTokensList = [];
@@ -67,13 +67,13 @@ class TokenManager extends React.Component {
 
     async deleteTempToken(token) {
         this.setState({selectedTempToken: token});
-        const resp = await this.props.postWithAuth(this.props.ip + "/delete_token", {"type": "temp", "token_to_delete": token.split(": ")[1]});
+        const resp = await this.props.postWithAuth(this.props.ip + "/api/tokens/delete", {"type": "temp", "token_to_delete": token.split(": ")[1]});
         this.afterTokenDelete(resp);
     }
 
     async deletePermaToken(token) {
         this.setState({selectedPermaToken: token});
-        const resp = await this.props.postWithAuth(this.props.ip + "/delete_token", {"type": "perma", "token_to_delete": token.split(": ")[1]});
+        const resp = await this.props.postWithAuth(this.props.ip + "/api/tokens/delete", {"type": "perma", "token_to_delete": token.split(": ")[1]});
         this.afterTokenDelete(resp);
     }
 

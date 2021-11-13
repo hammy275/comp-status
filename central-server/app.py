@@ -116,8 +116,8 @@ def after_request(response):
     return response
 
 
-@app.route("/give_data", methods=["POST"])
-def give_data():
+@app.route("/api/data/get", methods=["POST"])
+def send_data_to_client():
     data = request.get_json()
     if auth.check_permission(data["token"], "client_user"):
         to_del = []
@@ -131,7 +131,7 @@ def give_data():
         return jsonify({"message": "No permission!"}), 401
 
 
-@app.route("/list_users", methods=["POST"])
+@app.route("/api/users/list", methods=["POST"])
 def list_users():
     data = request.get_json()
     if auth.check_permission(data["token"], "manage_users"):
@@ -140,7 +140,7 @@ def list_users():
         return jsonify({"message": "No permission!"}), 401
 
 
-@app.route("/delete_user", methods=["POST"])
+@app.route("/api/users/delete", methods=["POST"])
 def delete_user():
     data = request.get_json()
     if auth.check_permission(data["token"], "manage_users"):
@@ -149,7 +149,7 @@ def delete_user():
         return jsonify({"message": "No permission!"}), 401
 
 
-@app.route("/add_user", methods=["POST"])
+@app.route("/api/users/add", methods=["POST"])
 def add_user():
     data = request.get_json()
     if auth.check_permission(data["token"], "manage_users"):
@@ -158,13 +158,13 @@ def add_user():
         return jsonify({"message": "No permission!"}), 401
 
 
-@app.route("/ping", methods=["POST"])
+@app.route("/api/ping", methods=["POST"])
 def ping():
     return jsonify({"message": "Pong!"})
 
 
-@app.route("/take_data", methods=["POST"])
-def take_data():
+@app.route("/api/data/put", methods=["POST"])
+def take_data_from_client():
     data = request.get_json()
     if not auth.check_permission(data["token"], "computer_user"):
         return jsonify({"message": "No permission!"}), 401
@@ -178,7 +178,7 @@ def take_data():
     return jsonify({"message": "Data successfully processed!"})
 
 
-@app.route("/get_tokens", methods=["POST"])
+@app.route("/api/tokens/get", methods=["POST"])
 def get_tokens():
     data = request.get_json()
     if auth.check_permission(data["token"], "revoke_tokens"):
@@ -187,7 +187,7 @@ def get_tokens():
         return jsonify({"message": "No permission!"}), 401
     
 
-@app.route("/delete_token", methods=["POST"])
+@app.route("/api/tokens/delete", methods=["POST"])
 def delete_token():
     data = request.get_json()
     if auth.check_permission(data["token"], "revoke_tokens"):

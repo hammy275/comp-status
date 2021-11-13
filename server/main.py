@@ -109,7 +109,7 @@ def ping(ip):
         bool: Whether the requested JSON at thes URL has the key "message" that equals "Pong!"
 
     """
-    data = post_with_auth(ip + "/ping")
+    data = post_with_auth("https://" + ip + "/api/ping")
     return data["message"]
 
 
@@ -182,7 +182,7 @@ def main_loop():
             cpu_temps = [""]
 
         try:
-            post_with_auth("https://{}/take_data".format(settings["ip"]), {
+            post_with_auth("https://{}/api/data/put".format(settings["ip"]), {
                 "pc_name": pc_name,
                 "current_memory": current_memory, "used_memory": used_memory,
                 "cpu_usage": cpu_usage, "current_turbo": current_turbo, "max_turbo": max_turbo,
