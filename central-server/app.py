@@ -54,7 +54,19 @@ try:
 except KeyError:
     domain = None
 
+try:
+    fts_complete = config["fts_complete"]
+except KeyError:
+    fts_complete = False
+
+if not fts_complete:
+    port = 5000
+
 @app.route('/')
+@app.route("/fts")
+@app.route("/login")
+@app.route("/gui_tokens")
+@app.route("/gui_users")
 def index():
     return send_from_directory(react_dir, "index.html")
 
@@ -204,5 +216,30 @@ def delete_token():
         return jsonify({"message": "No permission!"}), 401
 
 
+@app.route("/api/fts", methods=["POST"])
+def first_time_setup():
+    data = request.get_json()
+    if auth.check_permission(data["token"], "fts"):
+        return auth.first_time_setup(data)
+    else:
+        return jsonify({"message": "No permission!"}), 401
+
+
+def fts_prep():
+    if not fts_complete:
+        import string, secrets
+        alphabet = string.ascii_letters + string.digits
+        password = ''.join(secrets.choice(alphabet) for i in range(16))
+        auth.delete_user("fts_user", return_jsonify=False)
+        auth.add_user("fts_user", password, ["fts"], return_jsonify=False)
+        print("{}\n{}".format("#"*60, "#"*60))
+        print("Please complete first time setup using username 'fts_user' and password '{}'!".format(password))
+        print("You can do so by visiting https://127.0.0.1:5000/login , logging in, then clicking 'First Time Setup' at the top-left.")
+        print("You will most likely receive an SSL warning when visiting the above page. This is safe to ignore; Flask's adhoc")
+        print("setting is used to ensure encryption, even if at the cost of using a self-signed certificate (which the OS")
+        print("cannot verify)!")
+        print("{}\n{}".format("#"*60, "#"*60))
+
 if __name__ == "__main__":
+    fts_prep()
     app.run("0.0.0.0", port, ssl_context="adhoc")

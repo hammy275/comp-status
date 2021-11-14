@@ -5,7 +5,7 @@ import getpass
 import sys
 import bcrypt
 
-config_version = 5
+config_version = 6
 
 try:
     with open("db.json") as f:
@@ -15,7 +15,7 @@ except (json.decoder.JSONDecodeError, FileNotFoundError):
         with open("users.json") as f:
             db = json.load(f)
     except (json.decoder.JSONDecodeError, FileNotFoundError):
-        db = {"version": config_version, "users": {}, "port": 5000}
+        db = {"version": config_version, "users": {}, "port": 5000, "fts_complete": False}
 
 
 def get_config(key):
@@ -62,6 +62,9 @@ def upgrade_db():
         elif db_version == 4:
             print("Upgrading from DB version 4 to 5")
             db["use_cors"] = True
+        elif db_version == 5:
+            print("Upgrading from DB version 5 to 6")
+            db["fts_complete"] = True
         db_version += 1
         db["version"] = db_version
         write_db()

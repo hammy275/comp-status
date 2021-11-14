@@ -28,8 +28,8 @@ try:
         db = json.load(f)
         users = db["users"]
 except (json.decoder.JSONDecodeError, FileNotFoundError):
-    print("db.json does not exist! Please run server_manager.py (and configure a user if one has not already been)!")
-    sys.exit(1)
+    db = {"fts_complete": False, "users": {}}  # The bare minimum db for first time setup
+    users = db["users"]
 
 expire_time = 60*60*24  # Time in seconds until a token expires
 
@@ -201,15 +201,73 @@ def get_temp_token(user, perma_token):
         return jsonify({"message": "Unauthorized!"}), 401
 
 
-def delete_user(user):
-    del db["users"][user]
+def delete_user(user, return_jsonify=True):
+    try:
+        del db["users"][user]
+    except KeyError:
+        if return_jsonify:
+            return jsonify({"message": "User does not exist!"}), 400
+        else:
+            return 400
     write_db()
-    return jsonify({"message": "Successfully deleted user!"}), 200
+    if return_jsonify:
+        return jsonify({"message": "Successfully deleted user!"}), 200
+    else:
+        return 200
 
 
-def add_user(user, password, permissions):
+def add_user(user, password, permissions, return_jsonify=True):
     if user.lower() in db["users"]:
-        return jsonify({"message": "User already exists!"}), 400
+        if return_jsonify:
+            return jsonify({"message": "User already exists!"}), 400
+        else:
+            return 400
     db["users"][user.lower()] = {"password": bcrypt.hashpw(password.encode('utf-8'), bcrypt.gensalt()).decode("utf-8"), "permissions": permissions}
     write_db()
-    return jsonify({"message": "User successfully added!"}), 200
+    if return_jsonify:
+        return jsonify({"message": "User successfully added!"}), 200
+    else:
+        return 200
+
+
+def first_time_setup(data):
+    """Do First time setup.
+
+    The new user created here should receive every permission except computer_user and fts, effectively making
+    it an "admin".
+
+    Data Arguments:
+        new_username (str): The username to create for usage
+        new_password (str): THe password for the new user
+        port (int): The port to host the server on
+        domain (str): The domain for the server (such as "example.com")
+
+    Args:
+        data (dict): Dictionary containing the data found above
+
+    Returns:
+        JSON, int: JSON and a HTTP code to send to the client
+
+    """
+    if db["fts_complete"]:
+        return jsonify({"message": "First time setup already completed!"}), 409
+    else:
+        if not isinstance(data["port"], int):
+            try:
+                data["port"] = int(data["port"])
+            except ValueError:
+                return jsonify({"message": "'port' must be an int!"}), 400
+        data["new_username"] = str(data["new_username"])
+        data["new_password"] = str(data["new_password"])
+        if data["domain"]:
+            data["domain"] = str(data["domain"])
+        else:
+            data["domain"] = None
+        delete_user("fts_user")
+        add_user(data["new_username"], data["new_password"], ["client_user", "revoke_tokens", "manage_users"])
+        db["port"] = data["port"]
+        db["domain"] = data["domain"]
+        db["fts_complete"] = True
+        db["use_cors"] = True
+        write_db()
+        return jsonify({"message": "Successfully completed first time setup!"}), 200

@@ -10,6 +10,7 @@ import TokenManager from "./pages/TokenManager";
 import NavBar from "./components/NavBar";
 import Login from "./pages/Login";
 import SmallHero from "./components/SmallHero";
+import FirstTimeSetup from "./pages/FirstTimeSetup";
 
 class App extends React.Component {
 
@@ -40,7 +41,7 @@ class App extends React.Component {
         this.state = {
             ip: ip, username: username, password: "", token: token, permaToken: permaToken,
             isDark: isDark, useCookies: useCookiesFromCookie, statusInfo: statusInfo, statusHeroType: statusHeroType,
-            useCustomIP: useCustomIP, loggedIn: loggedIn
+            useCustomIP: useCustomIP, loggedIn: loggedIn, permissions: []
         };
     }
 
@@ -238,7 +239,7 @@ class App extends React.Component {
     }
 
     logout() {
-        this.setState({loggedIn: false, permaToken: "", token: "", statusHeroType: "is-info", statusInfo: "Logged out!"});
+        this.setState({loggedIn: false, permaToken: "", token: "", statusHeroType: "is-info", statusInfo: "Logged out!", permissions: []});
         this.delCookie("token");
         this.delCookie("permaToken");
     }
@@ -270,7 +271,7 @@ class App extends React.Component {
 
         return(
             <>
-            <NavBar textColor={textColor} backgroundColor={backgroundColor}/>
+            <NavBar textColor={textColor} backgroundColor={backgroundColor} permissions={this.state.permissions}/>
             <Routes>
                 <Route path="/gui_users" element={
                     <UserManager buttonTextColor={buttonTextColor} textColor={textColor} backgroundColor={backgroundColor}
@@ -292,6 +293,10 @@ class App extends React.Component {
                     toggleDarkMode={this.toggleDarkMode} useCookies={this.state.useCookies} toggleUseIP={this.toggleUseIP}
                     useIP={this.state.useCustomIP} loggedIn={this.state.loggedIn} handleLogin={this.attemptLogin}
                     handleLogout={this.logout}/>
+                }/>
+                <Route path="/fts" element={
+                    <FirstTimeSetup textColor={textColor} buttonTextColor={buttonTextColor} backgroundColor={backgroundColor}
+                    ip={ip} postWithAuth={this.postWithAuth}/>
                 }/>
             </Routes>
             <br/>
