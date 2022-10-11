@@ -32,7 +32,8 @@ class App extends React.Component {
         let username = this.readCookie("username") ? this.readCookie("username") : "";
         let token = this.readCookie("token") ? this.readCookie("token") : "";
         let permaToken = this.readCookie("permaToken") ? this.readCookie("permaToken") : "";
-        
+        let permissions = this.readCookie("permissions") ? this.readCookie("permissions").split(",") : "";
+
         let useCustomIP = ip !== "";
         let loggedIn = token !== "";
         let statusInfo = loggedIn ? "Logged in!" : "Waiting for login"
@@ -41,7 +42,7 @@ class App extends React.Component {
         this.state = {
             ip: ip, username: username, password: "", token: token, permaToken: permaToken,
             isDark: isDark, useCookies: useCookiesFromCookie, statusInfo: statusInfo, statusHeroType: statusHeroType,
-            useCustomIP: useCustomIP, loggedIn: loggedIn, permissions: []
+            useCustomIP: useCustomIP, loggedIn: loggedIn, permissions: permissions
         };
     }
 
@@ -166,8 +167,7 @@ class App extends React.Component {
             this.setState({token: returned["token"], permissions: returned["permissions"], statusHeroType: "is-success", statusInfo: "Logged in!"});
             if (this.state.useCookies) {
                 this.setCookie("token", this.state.token);
-                this.setCookie("canToken", this.state.permissions.includes("revoke_tokens").toString());
-                this.setCookie("canManageUsers", this.state.permissions.includes("manage_users").toString());
+                this.setCookie("permissions", this.state.permissions.join(","));
             }
             return "retry";
         } else if (returned["message"].includes("uccess")) {
