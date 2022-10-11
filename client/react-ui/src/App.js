@@ -21,18 +21,18 @@ class App extends React.Component {
         this.postWithAuth = this.postWithAuth.bind(this);
         this.getField = this.getField.bind(this);
         this.toggleDarkMode = this.toggleDarkMode.bind(this);
-        this.handleCookieChange = this.handleCookieChange.bind(this);
+        this.handleStorageChange = this.handleStorageChange.bind(this);
         this.toggleUseIP = this.toggleUseIP.bind(this);
         this.attemptLogin = this.attemptLogin.bind(this);
         this.logout = this.logout.bind(this);
 
-        let useCookiesFromCookie = this.readCookie("useCookies") === "true";
-        let isDark = this.readCookie("isDark") === "true";
-        let ip = this.readCookie("ipAddress") ? this.readCookie("ipAddress") : "";
-        let username = this.readCookie("username") ? this.readCookie("username") : "";
-        let token = this.readCookie("token") ? this.readCookie("token") : "";
-        let permaToken = this.readCookie("permaToken") ? this.readCookie("permaToken") : "";
-        let permissions = this.readCookie("permissions") ? this.readCookie("permissions").split(",") : "";
+        let useStoragesFromStorage = this.readStorage("useStorages") === "true";
+        let isDark = this.readStorage("isDark") === "true";
+        let ip = this.readStorage("ipAddress") ? this.readStorage("ipAddress") : "";
+        let username = this.readStorage("username") ? this.readStorage("username") : "";
+        let token = this.readStorage("token") ? this.readStorage("token") : "";
+        let permaToken = this.readStorage("permaToken") ? this.readStorage("permaToken") : "";
+        let permissions = this.readStorage("permissions") ? this.readStorage("permissions").split(",") : "";
 
         let useCustomIP = ip !== "";
         let loggedIn = token !== "";
@@ -41,7 +41,7 @@ class App extends React.Component {
 
         this.state = {
             ip: ip, username: username, password: "", token: token, permaToken: permaToken,
-            isDark: isDark, useCookies: useCookiesFromCookie, statusInfo: statusInfo, statusHeroType: statusHeroType,
+            isDark: isDark, useStorages: useStoragesFromStorage, statusInfo: statusInfo, statusHeroType: statusHeroType,
             useCustomIP: useCustomIP, loggedIn: loggedIn, permissions: permissions
         };
     }
@@ -52,23 +52,19 @@ class App extends React.Component {
             state[field] = value;
 
             if (field === "username") {
-                this.setCookie("username", value, 1000 * 60 * 60 * 24 * 365);
+                this.setStorage("username", value);
             } else if (field === "ip" && state.useCustomIP) {
-                this.setCookie("ipAddress", state.ip, 1000 * 60 * 60 * 24 * 365);
+                this.setStorage("ipAddress", state.ip);
             }
 
             return state;
         })
     }
 
-    setCookie(name, value, expires, bypassNoCookie) {
-        let d = new Date();
-        if (expires) {
-            d.setTime(d.getTime() + expires);
-        } else {
-            d.setTime(d.getTime() + (1000 * 60 * 60 * 24));
+    setStorage(name, value, bypassNoStorage) {
+        if (bypassNoStorage || this.state.useStorages) {
+            window.localStorage.setItem(name, value);
         }
-        document.cookie = `${name}=${value};expires=${d.toUTCString()};path=/;SameSite=Strict`;
     }
     
     removeFromArray(array, item) {
@@ -81,7 +77,7 @@ class App extends React.Component {
     }
 
     toggleDarkMode() {
-        this.setCookie("isDark", (!this.state.isDark).toString(), 1000 * 60 * 60 * 24 * 36500, true);
+        this.setStorage("isDark", (!this.state.isDark).toString(), true);
         this.setState(function(state) {
             return {isDark: !state.isDark}
         });
@@ -96,34 +92,26 @@ class App extends React.Component {
         return array;
     }
     
-    delCookie(name) {
-        document.cookie = `${name}=; expires=Thu, 01 Jan 1970 00:00:00 UTC; path=/;`;
+    delStorage(name) {
+        window.localStorage.removeItem(name);
     }
     
-    readCookie(name, def_value) {
-        let cookieList = document.cookie.split(";");
-        for (let i = 0; i < cookieList.length; i++) {
-            if (cookieList[i].startsWith(`${name}=`)) {
-                let toStart = `${name}=`.length;
-                return cookieList[i].substring(toStart, cookieList[i].length);
-            } else if (cookieList[i].startsWith(` ${name}=`)) {
-                let toStart = ` ${name}=`.length;
-                return cookieList[i].substring(toStart, cookieList[i].length);
-            }
-        }
-        return def_value
+    readStorage(name, def_value) {
+        let val = window.localStorage.getItem(name);
+        return val ? val : def_value;
     }
 
-    handleCookieChange() {
+    handleStorageChange() {
         this.setState(function(state) {
-            return {useCookies: !state.useCookies}
+            return {useStorages: !state.useStorages}
         });
-        this.setCookie("useCookies", (!this.state.useCookies).toString(), 1000*60*60*24*36500);
-        if (this.state.useCookies) {
-            this.delCookie("ipAddress");
-            this.delCookie("username");
-            this.delCookie("token");
-            this.delCookie("permaToken");
+        this.setStorage("useStorages", (!this.state.useStorages).toString(), true);
+        if (this.state.useStorages) {
+            this.delStorage("ipAddress");
+            this.delStorage("username");
+            this.delStorage("token");
+            this.delStorage("permaToken");
+            this.delStorage("permissions");
         }
     }
     
@@ -134,7 +122,7 @@ class App extends React.Component {
             } else if (returned["message"].includes("Unauthorized")) {
                 this.setState({token: null, haveGoodData: false});
                 this.setState((state, props) => ({failCount: state.failCount + 1}));
-                this.delCookie("token");
+                this.delStorage("token");
                 this.setState({haveGoodData: false, statusHeroType: "is-danger",
                 statusInfo: "Invalid username/password!"});
                 if (this.state.failCount >= 3) {
@@ -146,7 +134,7 @@ class App extends React.Component {
                 return "fail";
             } else if (returned["message"] === "Token expired!") {
                 this.setState({token: null});
-                this.delCookie("token");
+                this.delStorage("token");
                 return "retry";
             } else if (returned["message"] && status === 200) {
                 return "success";
@@ -157,17 +145,17 @@ class App extends React.Component {
             return "fail";
         } else if (returned["message"] === "Generated perma-token!") {
             this.setState({permaToken: returned["token"], statusHeroType: "is-info", statusInfo: "Authenticating..."});
-            if (this.state.useCookies) {
-                this.setCookie("permaToken", this.state.permaToken, 1000*60*60*24*36500);
-                this.setCookie("ipAddress", this.state.ip, 1000*60*60*24*36500);
-                this.setCookie("username", this.state.username, 1000*60*60*24*36500);
+            if (this.state.useStorages) {
+                this.setStorage("permaToken", this.state.permaToken);
+                this.setStorage("ipAddress", this.state.ip);
+                this.setStorage("username", this.state.username);
             }
             return "retry";
         } else if (returned["message"] === "Generated temporary-token!") {
             this.setState({token: returned["token"], permissions: returned["permissions"], statusHeroType: "is-success", statusInfo: "Logged in!"});
-            if (this.state.useCookies) {
-                this.setCookie("token", this.state.token);
-                this.setCookie("permissions", this.state.permissions.join(","));
+            if (this.state.useStorages) {
+                this.setStorage("token", this.state.token);
+                this.setStorage("permissions", this.state.permissions.join(","));
             }
             return "retry";
         } else if (returned["message"].includes("uccess")) {
@@ -215,9 +203,9 @@ class App extends React.Component {
         this.setState((state) => {
             state.useCustomIP = !state.useCustomIP;
             if (state.useCustomIP) {
-                this.setCookie("ipAddress", state.ip, 1000 * 60 * 60 * 24 * 365);
+                this.setStorage("ipAddress", state.ip);
             } else {
-                this.setCookie("ip", "", 1000 * 60 * 60 * 24 * 365);
+                this.setStorage("ip", "");
             }
             return state;
         });
@@ -240,8 +228,8 @@ class App extends React.Component {
 
     logout() {
         this.setState({loggedIn: false, permaToken: "", token: "", statusHeroType: "is-info", statusInfo: "Logged out!", permissions: []});
-        this.delCookie("token");
-        this.delCookie("permaToken");
+        this.delStorage("token");
+        this.delStorage("permaToken");
     }
 
     render() {
@@ -289,8 +277,8 @@ class App extends React.Component {
                 />
                 <Route path="/login" element={
                     <Login ip={this.state.ip} username={this.state.username} password={this.state.password} backgroundColor={backgroundColor}
-                    textColor={textColor} buttonTextColor={buttonTextColor} getField={this.getField} toggleCookies={this.handleCookieChange}
-                    toggleDarkMode={this.toggleDarkMode} useCookies={this.state.useCookies} toggleUseIP={this.toggleUseIP}
+                    textColor={textColor} buttonTextColor={buttonTextColor} getField={this.getField} toggleStorage={this.handleStorageChange}
+                    toggleDarkMode={this.toggleDarkMode} useStorages={this.state.useStorages} toggleUseIP={this.toggleUseIP}
                     useIP={this.state.useCustomIP} loggedIn={this.state.loggedIn} handleLogin={this.attemptLogin}
                     handleLogout={this.logout}/>
                 }/>

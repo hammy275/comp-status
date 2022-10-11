@@ -14,12 +14,12 @@ class Login extends React.Component {
      *  backgroundColor: Background color
      *  textColor: Text color
      *  buttonTextColor: Text color for buttons
-     *  useCookies: If saving cookies or not
+     *  useStorage: If saving to storage or not
      *  useIP: If using a custom IP or not
      *  loggedIn: If logged in or not
      *  
      *  getField: Function for getting data from a field
-     *  toggleCookies: Toggle cookies function
+     *  toggleStorage: Toggle storage usage function
      *  toggleDarkMode: Toggle dark mode function
      *  toggleUseIP: Toggle using custom IP
      *  handleLogin: Handle login function
@@ -84,7 +84,7 @@ class Login extends React.Component {
                     {this.props.loggedIn ? this.getLoggedIn() : this.getLoggedOut()}
                 </div>
                 <div className="column is-one-fourth">
-                    <Button textColor={this.props.buttonTextColor} handleClick={this.props.toggleCookies} value="Save Information in Cookies" buttonType={this.props.useCookies ? "is-success" : "is-danger"}/>
+                    <Button textColor={this.props.buttonTextColor} handleClick={this.props.toggleStorage} value="Save Information in Local Storage" buttonType={this.props.useStorages ? "is-success" : "is-danger"}/>
                     <br/>
                     <br/>
                     <Button textColor={this.props.buttonTextColor} handleClick={this.props.toggleDarkMode} value="Toggle Dark Mode" buttonType="is-info"/>
