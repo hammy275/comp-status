@@ -256,8 +256,13 @@ class App extends React.Component {
         }
         document.body.style.className = backgroundStyle;
         document.getElementById("html").setAttribute("class", backgroundStyle);
-
-        return(
+        const loginPage = <Login ip={this.state.ip} username={this.state.username} password={this.state.password} backgroundColor={backgroundColor}
+                    textColor={textColor} buttonTextColor={buttonTextColor} getField={this.getField} toggleStorage={this.handleStorageChange}
+                    toggleDarkMode={this.toggleDarkMode} useStorages={this.state.useStorages} toggleUseIP={this.toggleUseIP}
+                    useIP={this.state.useCustomIP} loggedIn={this.state.loggedIn} handleLogin={this.attemptLogin}
+                    handleLogout={this.logout}/>;
+        if (this.state.loggedIn) {
+            return(
             <>
             <NavBar textColor={textColor} backgroundColor={backgroundColor} permissions={this.state.permissions}/>
             <Routes>
@@ -275,13 +280,7 @@ class App extends React.Component {
                     postWithAuth={this.postWithAuth} ip={ip} isDark={this.state.isDark}
                     textColor={textColor} backgroundColor={backgroundColor} backgroundStyle={backgroundStyle} buttonTextColor={buttonTextColor}/>}
                 />
-                <Route path="/login" element={
-                    <Login ip={this.state.ip} username={this.state.username} password={this.state.password} backgroundColor={backgroundColor}
-                    textColor={textColor} buttonTextColor={buttonTextColor} getField={this.getField} toggleStorage={this.handleStorageChange}
-                    toggleDarkMode={this.toggleDarkMode} useStorages={this.state.useStorages} toggleUseIP={this.toggleUseIP}
-                    useIP={this.state.useCustomIP} loggedIn={this.state.loggedIn} handleLogin={this.attemptLogin}
-                    handleLogout={this.logout}/>
-                }/>
+                <Route path="/login" element={loginPage}/>
                 <Route path="/fts" element={
                     <FirstTimeSetup textColor={textColor} buttonTextColor={buttonTextColor} backgroundColor={backgroundColor}
                     ip={ip} postWithAuth={this.postWithAuth}/>
@@ -295,8 +294,15 @@ class App extends React.Component {
                     <SmallHero isVisible={true} heroType={this.state.statusHeroType} textColor={buttonTextColor} text={this.state.statusInfo}/>
                 </div>
             </div>
-            
+
         </>);
+        } else {
+            return (
+            <>
+            <NavBar textColor={textColor} backgroundColor={backgroundColor} permissions={this.state.permissions}/>
+            {loginPage}
+            </>);
+        }
     }
 }
 

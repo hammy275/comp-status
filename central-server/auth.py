@@ -249,7 +249,7 @@ def first_time_setup(data):
         JSON, int: JSON and a HTTP code to send to the client
 
     """
-    if db["fts_complete"]:
+    if "fts_complete" in db and db["fts_complete"]:
         return jsonify({"message": "First time setup already completed!"}), 409
     else:
         if not isinstance(data["port"], int):
