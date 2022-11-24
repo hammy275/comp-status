@@ -101,6 +101,8 @@ def auth_request():
         # Returns 200 so Chrome's console doesn't spam.
         return jsonify({"message": "OPTIONS requests are ignored by this server!"}), 200
     data = request.get_json()
+    if not isinstance(data, dict):
+        return {"message": "Authorization data not provided as a dict!"}, 400
     try:
         if data["auth"] == "password":
             return auth.get_perma_token(data["user"].lower(), data["password"])
