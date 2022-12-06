@@ -51,8 +51,8 @@ class Login extends React.Component {
         return (
             <>
                 {this.getIPBox()}
-                <InputField value={this.props.username} bgColor={this.props.backgroundColor} textColor={this.props.textColor} handleChange={(event) => this.props.getField("username", event.target.value)} inputText="Username: " type="text"/>
-                <InputField value={this.props.password} bgColor={this.props.backgroundColor} textColor={this.props.textColor} handleChange={(event) => this.props.getField("password", event.target.value)} inputText="Password: " type="password"/>
+                <InputField autocomplete={"username"} value={this.props.username} bgColor={this.props.backgroundColor} textColor={this.props.textColor} handleChange={(event) => this.props.getField("username", event.target.value)} inputText="Username: " type="text"/>
+                <InputField autocomplete={"password"} value={this.props.password} bgColor={this.props.backgroundColor} textColor={this.props.textColor} handleChange={(event) => this.props.getField("password", event.target.value)} inputText="Password: " type="password"/>
                 <Button buttonType="is-info" textColor={this.props.buttonTextColor} handleClick={this.props.handleLogin} value="Login"/>
             </>
         );    

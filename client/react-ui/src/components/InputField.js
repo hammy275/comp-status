@@ -9,17 +9,20 @@ export default function InputField(props) {
      *  bgColor - Background color
      *  inputText - Label for text box
      *  type - Type of input ("text", "password", etc.)
+     *  autocomplete (optional) - Autocomplete type
     */
     let value = "";
     if (props.value) {
         value = props.value;
     }
+    let autocomplete = undefined;
+    if (props.autocomplete) {
+        autocomplete = props.autocomplete;
+    }
     return (
-        <form onSubmit={(event) => event.preventDefault()}>
-            <label className="label" style={{color: props.textColor}}>
-                {props.inputText}
-                <input value={value} style={{backgroundColor: props.bgColor, color: props.textColor}} className="input" type={props.type} onChange={props.handleChange} />
-            </label>
-        </form>
+        <label className="label" style={{color: props.textColor}}>
+            {props.inputText}
+            <input autoComplete={autocomplete} value={value} style={{backgroundColor: props.bgColor, color: props.textColor}} className="input" type={props.type} onChange={props.handleChange} />
+        </label>
     )
 }
