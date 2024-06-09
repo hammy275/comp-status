@@ -131,6 +131,8 @@ def startup():
                 print(status)
                 print("Failed to reach central-server.")
                 sys.exit(1)
+        else:
+            perma_token = settings["token"]
     except (json.decoder.JSONDecodeError, FileNotFoundError, KeyError):
         print("Welcome to comp-status! By using this program, you agree to the following license: ")
         print(license)
