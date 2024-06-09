@@ -1,0 +1,15 @@
+FROM node:14 as build-client
+
+COPY client /app/client/
+WORKDIR /app/client/react-ui
+RUN npm install
+RUN npm run build
+
+FROM python:3-slim
+COPY central-server /app/central-server
+COPY --from=build-client /app/client/ /app/client/
+WORKDIR /app/central-server
+RUN ["python3", "-m", "pip", "install", "-r", "requirements.txt"]
+
+EXPOSE 5000
+CMD ["python3", "run_server.py", "http"]

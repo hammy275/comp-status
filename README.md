@@ -7,7 +7,7 @@ A small utility to get processor usage, RAM usage, etc. from computers.
 
 Although this program does use bcrypt to store passwords, and communication is done over a dummy HTTPS certificate, I would highly recommend NOT using this program without inspecting `auth.py` and `server_manager.py` and seeing for yourself if it's secure enough. I'm just one person, and this is my first program to do any form of password storage, so I have my doubts it's done properly.
 
-## Requirements
+## Requirements (if not using Docker)
 
 * Python 3.6 or later
 * Pip to install the requirements.txt
@@ -23,4 +23,6 @@ Although this program does use bcrypt to store passwords, and communication is d
 
 ## Setup
 
-See [the setup wiki page](https://github.com/hammy3502/comp-status/wiki/Setup)
+See [the setup wiki page](https://github.com/hammy275/comp-status/wiki/Setup).
+
+You can setup the central server and server at the same time with Docker by [following those instructions on the wiki](https://github.com/hammy275/comp-status/wiki/Setup-Central-Server-with-Docker).

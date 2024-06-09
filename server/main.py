@@ -55,7 +55,7 @@ def post_with_auth(url, inp_data={}):
     global token
     global settings
     if perma_token is None:
-        auth_data = {"user": settings["user"], "password": getpass.getpass("Please enter your password: "), "auth": "password"}
+        auth_data = {"user": settings["user"], "password": settings["password"], "auth": "password"}
         r = requests.post(url, json=auth_data, verify=verify_requests)
         data = json.loads(r.text)
         if data["message"] == "Unauthorized!":
@@ -109,7 +109,7 @@ def ping(ip):
         bool: Whether the requested JSON at thes URL has the key "message" that equals "Pong!"
 
     """
-    data = post_with_auth("https://" + ip + "/api/ping")
+    data = post_with_auth(ip + "/api/ping")
     return data["message"]
 
 
@@ -120,22 +120,31 @@ def startup():
     try:
         with open("settings.json") as f:
             settings = json.load(f)
-            perma_token = settings["token"]
+        if "user" not in settings or ("password" not in settings and "token" not in settings) or "ip" not in settings:
+            raise KeyError()
+        if "password" in settings:
+            status = ping(settings["ip"])
+            if status == "Pong!":
+                del settings["password"]
+                write_db()
+            else:
+                print(status)
+                print("Failed to reach central-server.")
+                sys.exit(1)
     except (json.decoder.JSONDecodeError, FileNotFoundError, KeyError):
         print("Welcome to comp-status! By using this program, you agree to the following license: ")
         print(license)
-        print("If you don't agree with the license above, please exit now.")
-        while True:
-            ip = input("Enter IP address of central server (including port)! ")
-            user = input("Enter Username: ")
-            settings["user"] = user
-            status = ping(ip)
-            if status == "Pong!":
-                settings["ip"] = ip
-                write_db()
-                break
-            else:
-                print(status)
+        print("If you don't agree with the license above, please cease using this program.")
+        file_data = {
+            "ip": "URL_TO_YOUR_SERVER_HERE",
+            "user": "YOUR_USERNAME_HERE",
+            "password": "YOUR_PASSWORD_HERE_THAT_WILL_BE_REMOVED_AFTER_SUCCESSFUL_AUTHENTICATION"
+        }
+        with open("settings.json", "w") as f:
+            json.dump(file_data, f)
+        print("Wrote settings file to settings.json. If you're running inside a Docker container, you should "
+              "point a settings.json file to /app/settings.json if you haven't already, then run this script again.")
+        sys.exit(1)
 
 
 def set_exit(sig, frame):
@@ -170,7 +179,7 @@ def main_loop():
         try:
             for i in psutil.sensors_temperatures()["coretemp"]:
                 cpu_temps.append(str(i[1]))
-        except AttributeError:
+        except (AttributeError, KeyError):
             pass
         if cpu_temps:
             temps = len(cpu_temps)
@@ -182,7 +191,7 @@ def main_loop():
             cpu_temps = [""]
 
         try:
-            post_with_auth("https://{}/api/data/put".format(settings["ip"]), {
+            post_with_auth("{}/api/data/put".format(settings["ip"]), {
                 "pc_name": pc_name,
                 "current_memory": current_memory, "used_memory": used_memory,
                 "cpu_usage": cpu_usage, "current_turbo": current_turbo, "max_turbo": max_turbo,

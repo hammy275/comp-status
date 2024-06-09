@@ -1,0 +1,12 @@
+FROM python:3-slim
+
+ENV PYTHONDONTWRITEBYTECODE=1
+ENV PYTHONUNBUFFERED=1
+
+WORKDIR /app
+
+COPY server /app/
+
+RUN ["python3", "-m", "pip", "install", "-r", "requirements.txt"]
+
+CMD ["python3", "main.py"]

@@ -1,0 +1,23 @@
+# Docker Compose for both Central Server and Server without HTTPS.
+services:
+  central-server:
+    container_name: comp-status-central-server
+    hostname: comp-status-central-server
+    build:
+      context: .
+      dockerfile: Dockerfile-Central-Server
+    ports:
+      - 5000:5000
+    environment:
+      - COMP_STATUS_NO_HTTPS=true
+    volumes:
+      - ./central-server/db.json:/app/central-server/db.json
+    restart: unless-stopped
+  server:
+    container_name: comp-status-server
+    hostname: comp-status-server
+    build:
+      context: .
+      dockerfile: Dockerfile-Server
+    volumes:
+      - ./server/settings.json:/app/settings.json
