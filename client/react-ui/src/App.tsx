@@ -1,7 +1,10 @@
 import Login from "./page/Login.tsx"
 import {useState} from "react";
-import {AppBar, Box, Container, Divider, Toolbar, Typography} from "@mui/material";
+import {AppBar, Box, Toolbar, Typography} from "@mui/material";
 import ComputerStatus from "./page/ComputerStatus.tsx";
+import {Route, Routes} from "react-router";
+import Index from "./page/Index.tsx";
+import Page404 from "./page/Page404.tsx";
 
 function App() {
     const [authState, doSetAuthState] = useState({username: "", password: ""});
@@ -43,9 +46,12 @@ function App() {
                 </Box>
             </AppBar>
             <Box sx={{margin: "1rem"}}>
-                <Login setAuthState={setAuthState} username={authState.username} password={authState.password} doLogin={doLogin}/>
-                <Divider/>
-                <ComputerStatus data={fakeComputerData()}/>
+                <Routes>
+                    <Route path="/login" element={<Login setAuthState={setAuthState} username={authState.username} password={authState.password} doLogin={doLogin}/>}/>
+                    <Route path="/status" element={<ComputerStatus data={fakeComputerData()}/>}/>
+                    <Route path="/" element={<Index loggedIn={false}/>}/>
+                    <Route path="*" element={<Page404/>}/>
+                </Routes>
             </Box>
         </>
     )
