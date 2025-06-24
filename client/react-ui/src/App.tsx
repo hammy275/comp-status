@@ -1,6 +1,6 @@
 import Login from "./page/Login.tsx"
 import {useState} from "react";
-import {Divider} from "@mui/material";
+import {AppBar, Box, Container, Divider, Toolbar, Typography} from "@mui/material";
 import ComputerStatus from "./page/ComputerStatus.tsx";
 
 function App() {
@@ -35,9 +35,18 @@ function App() {
 
     return (
         <>
-            <Login setAuthState={setAuthState} username={authState.username} password={authState.password} doLogin={doLogin}/>
-            <Divider/>
-            <ComputerStatus data={fakeComputerData()}/>
+            <AppBar position="static">
+                <Box sx={{marginLeft: "1rem"}}>
+                    <Toolbar disableGutters>
+                        <Typography variant="h5">comp-status</Typography>
+                    </Toolbar>
+                </Box>
+            </AppBar>
+            <Box sx={{margin: "1rem"}}>
+                <Login setAuthState={setAuthState} username={authState.username} password={authState.password} doLogin={doLogin}/>
+                <Divider/>
+                <ComputerStatus data={fakeComputerData()}/>
+            </Box>
         </>
     )
 }

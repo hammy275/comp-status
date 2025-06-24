@@ -7,7 +7,7 @@ interface ComputerStatusProps {
 function ComputerStatus({data}: ComputerStatusProps) {
     const rows = [];
     for (const [name, computer_data] of Object.entries(data)) {
-        const memory_usage = Math.round(computer_data.used_memory / computer_data.current_memory * 100) / 100;
+        const memory_usage = Math.round(computer_data.used_memory / computer_data.current_memory * 100);
         const cpu_temp = "cpu_pack_temp" in computer_data ? <TableCell>{`${computer_data.cpu_pack_temp}°C`}</TableCell> : <TableCell/>
         rows.push(
             <TableRow key={name}>
