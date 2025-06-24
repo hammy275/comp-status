@@ -233,7 +233,7 @@ def fts_prep():
         alphabet = string.ascii_letters + string.digits
         password = ''.join(secrets.choice(alphabet) for i in range(16))
         auth.delete_user("fts_user", return_jsonify=False)
-        auth.add_user("fts_user", password, ["fts"], return_jsonify=False)
+        auth.add_user("fts_user", password, ["fts"], return_jsonify=False, bypass_illegal_perms=True)
         print("{}\n{}".format("#"*60, "#"*60))
         print("Please complete first time setup using username 'fts_user' and password '{}'!".format(password))
         print("You can do so by visiting https://127.0.0.1:5000/login , logging in, then clicking 'First Time Setup' at the top-left.")

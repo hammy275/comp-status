@@ -19,9 +19,10 @@
 import time
 from secrets import token_urlsafe
 import json
-import sys
 import bcrypt
 from flask import jsonify
+
+ILLEGAL_PERMISSIONS = ["fts"]  # Permissions that shouldn't be able to be added via the API
 
 try:
     with open("db.json") as f:
@@ -216,12 +217,14 @@ def delete_user(user, return_jsonify=True):
         return 200
 
 
-def add_user(user, password, permissions, return_jsonify=True):
+def add_user(user, password, permissions, return_jsonify=True, bypass_illegal_perms=False):
     if user.lower() in db["users"]:
         if return_jsonify:
             return jsonify({"message": "User already exists!"}), 400
         else:
             return 400
+    if not bypass_illegal_perms:
+        permissions = [p for p in permissions if p not in ILLEGAL_PERMISSIONS]
     db["users"][user.lower()] = {"password": bcrypt.hashpw(password.encode('utf-8'), bcrypt.gensalt()).decode("utf-8"), "permissions": permissions}
     write_db()
     if return_jsonify:
